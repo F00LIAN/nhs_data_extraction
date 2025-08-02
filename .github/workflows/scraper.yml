@@ -79,7 +79,7 @@ jobs:
         
     - name: Upload logs and data
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: scraper-logs-${{ github.run_number }}
         path: |
