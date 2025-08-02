@@ -31,13 +31,11 @@ jobs:
         MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
 
       run: |
-        cd src/scraper
         python newhomesource.py
         echo "SCRAPER_EXIT_CODE=$?" >> $GITHUB_OUTPUT
         
     - name: Check scraper results
       run: |
-        cd src/scraper
         echo "=== SCRAPER RUN SUMMARY ==="
         
         # Find the latest log file
