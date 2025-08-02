@@ -57,11 +57,22 @@ class SafeConsoleHandler(logging.StreamHandler):
 
 # Configure logging
 def setup_logging():
-    """Setup logging configuration with proper Unicode handling"""
+    """Setup logging configuration with proper Unicode handling
+    
+    Creates log files in the logging/nhs/ directory relative to the script location.
+    """
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Create logging directory structure if it doesn't exist
+    log_dir = os.path.join(script_dir, "logging", "nhs")
+    os.makedirs(log_dir, exist_ok=True)
+    
     log_filename = f"scraper_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    log_filepath = os.path.join(log_dir, log_filename)
     
     # Create file handler with UTF-8 encoding
-    file_handler = logging.FileHandler(log_filename, encoding='utf-8')
+    file_handler = logging.FileHandler(log_filepath, encoding='utf-8')
     file_handler.setLevel(logging.INFO)
     
     # Create console handler with error handling for encoding issues
@@ -82,7 +93,9 @@ def setup_logging():
     # Clear any existing handlers to avoid duplicates
     logger.handlers = [file_handler, console_handler]
     
-    return logger, log_filename
+    # Return relative path from script directory for better user information
+    relative_log_path = os.path.join("logging", "nhs", log_filename)
+    return logger, relative_log_path
 
 def get_property_id(property_data):
     """Generate unique identifier for property based on URL and key attributes"""
@@ -215,16 +228,6 @@ def scrape_newhomesource():
     elif not new_documents:
         logger.info("ℹ️ No new documents to insert")
         db_success = True  # No new data is not a failure
-    
-    # Save JSON backup
-    try:
-        with open("newhomesource_data.json", 'w', encoding='utf-8') as f:
-            json.dump(new_documents, f, indent=2, ensure_ascii=False, default=str)
-        logger.info("✅ JSON backup saved successfully")
-    except Exception as e:
-        error_msg = f"❌ Error saving JSON backup: {e}"
-        logger.error(error_msg)
-        errors.append(error_msg)
     
     # Final summary and status
     logger.info("\n" + "=" * 50)
