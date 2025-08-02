@@ -88,7 +88,6 @@ jobs:
     - name: Report status in job summary
       if: always()
       run: |
-        cd src/scraper
         echo "# 🏠 NewHomeSource Scraper Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Run Time:** $(date) (Scheduled for 6 AM & 6 PM PST)" >> $GITHUB_STEP_SUMMARY
