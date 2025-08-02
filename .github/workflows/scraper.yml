@@ -81,8 +81,8 @@ jobs:
       with:
         name: scraper-logs-${{ github.run_number }}
         path: |
-          src/scraper/scraper_log_*.log
-          src/scraper/newhomesource_data.json
+          logging/nhs/scraper_log_*.log
+          logging/nhs/newhomesource_data.json
         retention-days: 7
         
     - name: Report status in job summary
