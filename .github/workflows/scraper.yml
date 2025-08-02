@@ -39,7 +39,7 @@ jobs:
         echo "=== SCRAPER RUN SUMMARY ==="
         
         # Find the latest log file
-        LOG_FILE=$(ls -t scraper_log_*.log 2>/dev/null | head -n1)
+        LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
         
         if [ -n "$LOG_FILE" ]; then
           echo "📋 Log file: $LOG_FILE"
