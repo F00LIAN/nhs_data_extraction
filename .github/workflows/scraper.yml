@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r src/scraper/requirements.txt
+        pip install -r requirements.txt
         
     - name: Run scraper
       id: scraper
@@ -31,17 +31,15 @@ jobs:
         MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
 
       run: |
-        cd src/scraper
         python newhomesource.py
         echo "SCRAPER_EXIT_CODE=$?" >> $GITHUB_OUTPUT
         
     - name: Check scraper results
       run: |
-        cd src/scraper
         echo "=== SCRAPER RUN SUMMARY ==="
         
         # Find the latest log file
-        LOG_FILE=$(ls -t scraper_log_*.log 2>/dev/null | head -n1)
+        LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
         
         if [ -n "$LOG_FILE" ]; then
           echo "📋 Log file: $LOG_FILE"
@@ -83,14 +81,13 @@ jobs:
       with:
         name: scraper-logs-${{ github.run_number }}
         path: |
-          src/scraper/scraper_log_*.log
-          src/scraper/newhomesource_data.json
+          logging/nhs/scraper_log_*.log
+          logging/nhs/newhomesource_data.json
         retention-days: 7
         
     - name: Report status in job summary
       if: always()
       run: |
-        cd src/scraper
         echo "# 🏠 NewHomeSource Scraper Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Run Time:** $(date) (Scheduled for 6 AM & 6 PM PST)" >> $GITHUB_STEP_SUMMARY
@@ -98,7 +95,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         
         # Find the latest log file
-        LOG_FILE=$(ls -t scraper_log_*.log 2>/dev/null | head -n1)
+        LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
         
         if [ -n "$LOG_FILE" ]; then
           if grep -q "🎉 OVERALL STATUS: SUCCESS" "$LOG_FILE"; then
