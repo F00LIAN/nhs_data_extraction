@@ -115,12 +115,13 @@ def get_property_id(property_data):
             return hashlib.md5("|".join(id_parts).encode()).hexdigest()
     return None
 
-def retry_request(url, max_retries=3, base_delay=1, max_delay=60, logger=None):
+def retry_request(url, session, max_retries=3, base_delay=1, max_delay=60, logger=None):
     """
     Retry HTTP requests with exponential backoff for handling rate limiting and temporary failures
     
     Args:
         url: URL to request
+        session: curl_cffi Session object for maintaining state
         max_retries: Maximum number of retry attempts
         base_delay: Base delay in seconds for exponential backoff
         max_delay: Maximum delay in seconds
@@ -136,7 +137,7 @@ def retry_request(url, max_retries=3, base_delay=1, max_delay=60, logger=None):
             if logger and attempt > 0:
                 logger.info(f"🔄 Retry attempt {attempt} for {url}")
             
-            response = curl_cffi.get(url, impersonate="chrome", timeout=30)
+            response = session.get(url, timeout=30)
             
             # Success for any 2xx status code
             if 200 <= response.status_code < 300:
@@ -209,6 +210,10 @@ def scrape_newhomesource():
     logger.info("Starting NewHomeSource scraping session")
     logger.info("=" * 50)
     
+    # Create session for maintaining cookies and state
+    session = curl_cffi.Session(impersonate="chrome")
+    logger.info("🔌 Created curl_cffi session with Chrome impersonation")
+    
     # MongoDB connection setup
     uri = f"mongodb+srv://{os.getenv('MONGO_DB_USERNAME')}:{os.getenv('MONGO_DB_PASSWORD')}@newhomesourcedata.6gdo85y.mongodb.net/?retryWrites=true&w=majority&appName=NewHomeSourceData"
     
@@ -253,7 +258,7 @@ def scrape_newhomesource():
         
         try:
             url = f"https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/menifee/page-{page}"
-            response = retry_request(url, max_retries=3, base_delay=2, max_delay=30, logger=logger)
+            response = retry_request(url, session, max_retries=3, base_delay=2, max_delay=30, logger=logger)
             
             if response is None:
                 error_msg = f"❌ Failed to get response for page {page} after all retries"
@@ -354,6 +359,10 @@ def scrape_newhomesource():
     if client:
         client.close()
         logger.info("🔌 MongoDB connection closed")
+    
+    # Close session
+    session.close()
+    logger.info("🔌 curl_cffi session closed")
     
     return exit_code, log_filename, overall_success
 
