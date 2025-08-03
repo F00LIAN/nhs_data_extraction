@@ -10,6 +10,8 @@ import hashlib
 import logging
 import sys
 import io
+import time
+import random
 
 # Force UTF-8 encoding for console output on Windows
 if sys.platform.startswith('win'):
@@ -113,6 +115,87 @@ def get_property_id(property_data):
             return hashlib.md5("|".join(id_parts).encode()).hexdigest()
     return None
 
+def retry_request(url, max_retries=3, base_delay=1, max_delay=60, logger=None):
+    """
+    Retry HTTP requests with exponential backoff for handling rate limiting and temporary failures
+    
+    Args:
+        url: URL to request
+        max_retries: Maximum number of retry attempts
+        base_delay: Base delay in seconds for exponential backoff
+        max_delay: Maximum delay in seconds
+        logger: Logger instance for logging retry attempts
+    
+    Returns:
+        response object or None if all retries failed
+    """
+    last_exception = None
+    
+    for attempt in range(max_retries + 1):  # +1 for initial attempt
+        try:
+            if logger and attempt > 0:
+                logger.info(f"🔄 Retry attempt {attempt} for {url}")
+            
+            response = curl_cffi.get(url, impersonate="chrome", timeout=30)
+            
+            # Success for any 2xx status code
+            if 200 <= response.status_code < 300:
+                if logger and attempt > 0:
+                    logger.info(f"✅ Request succeeded on attempt {attempt + 1}")
+                return response
+            
+            # Handle specific error codes
+            if response.status_code == 403:
+                if logger:
+                    logger.warning(f"⚠️ 403 Forbidden received (attempt {attempt + 1})")
+            elif response.status_code == 429:
+                if logger:
+                    logger.warning(f"⚠️ 429 Rate Limited received (attempt {attempt + 1})")
+            elif response.status_code >= 500:
+                if logger:
+                    logger.warning(f"⚠️ Server error {response.status_code} received (attempt {attempt + 1})")
+            else:
+                # For other 4xx errors, don't retry
+                if logger:
+                    logger.error(f"❌ HTTP {response.status_code} error - not retrying")
+                return response
+            
+            # Don't sleep on the last attempt
+            if attempt < max_retries:
+                # Exponential backoff with jitter
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                jitter = random.uniform(0.1, 0.3) * delay  # Add 10-30% jitter
+                total_delay = delay + jitter
+                
+                if logger:
+                    logger.info(f"💤 Waiting {total_delay:.1f}s before retry...")
+                time.sleep(total_delay)
+            
+            return response
+            
+        except Exception as e:
+            last_exception = e
+            if logger:
+                logger.warning(f"⚠️ Request exception on attempt {attempt + 1}: {e}")
+            
+            # Don't sleep on the last attempt
+            if attempt < max_retries:
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                jitter = random.uniform(0.1, 0.3) * delay
+                total_delay = delay + jitter
+                
+                if logger:
+                    logger.info(f"💤 Waiting {total_delay:.1f}s before retry...")
+                time.sleep(total_delay)
+    
+    # All retries failed
+    if logger:
+        logger.error(f"❌ All {max_retries + 1} attempts failed for {url}")
+        if last_exception:
+            logger.error(f"❌ Last exception: {last_exception}")
+    
+    return None
+
 def scrape_newhomesource():
     """Main scraping function with comprehensive logging and error handling"""
     logger, log_filename = setup_logging()
@@ -158,15 +241,25 @@ def scrape_newhomesource():
     pages_scraped = 0
     pages_with_errors = 0
     
-    # Scraping loop
+    # Scraping loop with retry logic and request delays
     for page in range(1, 10):
         logger.info(f"🔍 Scraping page {page}...")
         
+        # Add delay between page requests (except for first page)
+        if page > 1:
+            page_delay = random.uniform(2.0, 4.0)  # Random delay between 2-4 seconds
+            logger.info(f"💤 Waiting {page_delay:.1f}s before next page request...")
+            time.sleep(page_delay)
+        
         try:
-            response = curl_cffi.get(
-                f"https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/menifee/page-{page}", 
-                impersonate="chrome"
-            )
+            url = f"https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/menifee/page-{page}"
+            response = retry_request(url, max_retries=3, base_delay=2, max_delay=30, logger=logger)
+            
+            if response is None:
+                error_msg = f"❌ Failed to get response for page {page} after all retries"
+                logger.error(error_msg)
+                pages_with_errors += 1
+                continue
             
             if response.status_code != 200:
                 error_msg = f"❌ HTTP {response.status_code} error on page {page}"
