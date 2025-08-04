@@ -12,6 +12,7 @@ import sys
 import io
 import time
 import random
+import argparse
 
 # Force UTF-8 encoding for console output on Windows
 if sys.platform.startswith('win'):
@@ -197,8 +198,12 @@ def retry_request(url, session, max_retries=3, base_delay=1, max_delay=60, logge
     
     return None
 
-def scrape_newhomesource():
-    """Main scraping function with comprehensive logging and error handling"""
+def scrape_newhomesource(browser_impersonation="chrome"):
+    """Main scraping function with comprehensive logging and error handling
+    
+    Args:
+        browser_impersonation: Browser to impersonate ('chrome', 'firefox', 'safari', 'chrome_android', 'safari_ios')
+    """
     logger, log_filename = setup_logging()
     
     # Track overall success/failure
@@ -208,11 +213,18 @@ def scrape_newhomesource():
     
     logger.info("=" * 50)
     logger.info("Starting NewHomeSource scraping session")
+    logger.info(f"🌐 Browser impersonation: {browser_impersonation}")
     logger.info("=" * 50)
     
-    # Create session for maintaining cookies and state
-    session = curl_cffi.Session(impersonate="chrome")
-    logger.info("🔌 Created curl_cffi session with Chrome impersonation")
+    # Create session for maintaining cookies and state, rotate impersonation if scraper fails
+    try:
+        session = curl_cffi.Session(impersonate=browser_impersonation)
+        logger.info(f"🔌 Created curl_cffi session with {browser_impersonation} impersonation")
+    except Exception as e:
+        error_msg = f"❌ Failed to create session with {browser_impersonation}: {e}"
+        logger.error(error_msg)
+        errors.append(error_msg)
+        return 1, log_filename, False
     
     # MongoDB connection setup
     uri = f"mongodb+srv://{os.getenv('MONGO_DB_USERNAME')}:{os.getenv('MONGO_DB_PASSWORD')}@newhomesourcedata.6gdo85y.mongodb.net/?retryWrites=true&w=majority&appName=NewHomeSourceData"
@@ -367,6 +379,15 @@ def scrape_newhomesource():
     return exit_code, log_filename, overall_success
 
 if __name__ == "__main__":
-    exit_code, log_filename, success = scrape_newhomesource()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='NewHomeSource scraper with browser impersonation')
+    parser.add_argument('--browser', 
+                       choices=['chrome', 'firefox', 'safari', 'chrome_android', 'safari_ios'],
+                       default='chrome',
+                       help='Browser to impersonate (default: chrome)')
+    
+    args = parser.parse_args()
+    
+    exit_code, log_filename, success = scrape_newhomesource(browser_impersonation=args.browser)
     sys.exit(exit_code)
 

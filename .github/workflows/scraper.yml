@@ -2,8 +2,8 @@ name: NewHomeSource Scraper
 
 on:
   schedule:
-    # Run twice daily at 6 AM and 6 PM PST (2 AM and 2 PM UTC)
-    - cron: '0 2,14 * * *'
+    # Run once daily at 6 AM PST (2 AM UTC)
+    - cron: '0 2 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -24,15 +24,57 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Run scraper
+    - name: Run scraper with browser fallback
       id: scraper
       env:
         MONGO_DB_USERNAME: ${{ secrets.MONGO_DB_USERNAME }}
         MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
-
       run: |
-        python newhomesource.py
-        echo "SCRAPER_EXIT_CODE=$?" >> $GITHUB_OUTPUT
+        # List of browsers to try in order
+        BROWSERS=("chrome" "firefox" "safari" "chrome_android" "safari_ios")
+        SUCCESS=false
+        SUCCESSFUL_BROWSER=""
+        FINAL_EXIT_CODE=1
+        
+        echo "🔄 Starting scraper with browser fallback protocol"
+        echo "📋 Browser order: ${BROWSERS[*]}"
+        echo ""
+        
+        for browser in "${BROWSERS[@]}"; do
+          echo "🌐 Attempting scrape with browser: $browser"
+          echo "========================================"
+          
+          if python newhomesource.py --browser "$browser"; then
+            echo "✅ SUCCESS with browser: $browser"
+            SUCCESS=true
+            SUCCESSFUL_BROWSER="$browser"
+            FINAL_EXIT_CODE=0
+            break
+          else
+            echo "❌ FAILED with browser: $browser (exit code: $?)"
+            echo ""
+            
+            # Show last few lines of the latest log for debugging
+            LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
+            if [ -n "$LOG_FILE" ]; then
+              echo "📋 Last 5 lines from $LOG_FILE:"
+              tail -n 5 "$LOG_FILE"
+              echo ""
+            fi
+          fi
+        done
+        
+        echo "========================================"
+        if [ "$SUCCESS" = true ]; then
+          echo "🎉 SCRAPER COMPLETED SUCCESSFULLY with browser: $SUCCESSFUL_BROWSER"
+          echo "successful_browser=$SUCCESSFUL_BROWSER" >> $GITHUB_OUTPUT
+        else
+          echo "💥 SCRAPER FAILED with all browsers: ${BROWSERS[*]}"
+          echo "successful_browser=none" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "SCRAPER_EXIT_CODE=$FINAL_EXIT_CODE" >> $GITHUB_OUTPUT
+        exit $FINAL_EXIT_CODE
         
     - name: Check scraper results
       run: |
@@ -90,8 +132,9 @@ jobs:
       run: |
         echo "# 🏠 NewHomeSource Scraper Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Run Time:** $(date) (Scheduled for 6 AM & 6 PM PST)" >> $GITHUB_STEP_SUMMARY
+        echo "**Run Time:** $(date) (Scheduled for 6 AM PST)" >> $GITHUB_STEP_SUMMARY
         echo "**Run Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Successful Browser:** ${{ steps.scraper.outputs.successful_browser }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         # Find the latest log file
@@ -130,4 +173,5 @@ jobs:
       if: failure() || steps.scraper.outputs.SCRAPER_EXIT_CODE != '0'
       run: |
         echo "❌ Scraper failed with exit code: ${{ steps.scraper.outputs.SCRAPER_EXIT_CODE }}"
+        echo "❌ All browsers failed: chrome, firefox, safari, chrome_android, safari_ios"
         exit 1
