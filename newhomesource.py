@@ -307,11 +307,15 @@ def scrape_newhomesource(browser_impersonation="chrome"):
                     if property_id and property_id not in scraped_properties and property_id not in existing_ids:
                         scraped_properties.add(property_id)
                         
+                        # Extract county from display_name (e.g., "Riverside County, CA" -> "Riverside County")
+                        county = location_info["display_name"].split(",")[0].strip()
+                        
                         document = {
                             "property_id": property_id,
                             "scraped_at": datetime.now(),
                             "source_url": url,
                             "location_info": location_info,
+                            "county": county,
                             "property_data": data
                         }
                         new_documents.append(document)

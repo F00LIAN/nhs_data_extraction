@@ -1,0 +1,78 @@
+2025-08-05 18:12:29,880 - INFO - ==================================================
+2025-08-05 18:12:29,880 - INFO - Starting NewHomeSource scraping session
+2025-08-05 18:12:29,880 - INFO - 🌐 Browser impersonation: chrome
+2025-08-05 18:12:29,880 - INFO - ==================================================
+2025-08-05 18:12:29,880 - INFO - 🔌 Created curl_cffi session with chrome impersonation
+2025-08-05 18:12:30,732 - INFO - ✅ Successfully connected to MongoDB!
+2025-08-05 18:12:30,908 - INFO - ✅ Database indexes created/verified
+2025-08-05 18:12:30,978 - INFO - 📊 Found 0 existing properties in database
+2025-08-05 18:12:30,983 - INFO - 📊 Generated 18 URLs across 2 locations
+2025-08-05 18:12:30,983 - INFO - 🔍 Scraping Ventura County, CA (1/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1
+2025-08-05 18:12:32,639 - INFO - ✅ Ventura County, CA: 14 new properties found
+2025-08-05 18:12:32,639 - INFO - 🔍 Scraping Ventura County, CA (2/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-2
+2025-08-05 18:12:32,640 - INFO - 💤 Waiting 2.2s before next request...
+2025-08-05 18:12:36,256 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:12:36,257 - INFO - 🔍 Scraping Ventura County, CA (3/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-3
+2025-08-05 18:12:36,257 - INFO - 💤 Waiting 3.2s before next request...
+2025-08-05 18:12:40,934 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:12:40,934 - INFO - 🔍 Scraping Ventura County, CA (4/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-4
+2025-08-05 18:12:40,934 - INFO - 💤 Waiting 3.0s before next request...
+2025-08-05 18:12:45,424 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:12:45,424 - INFO - 🔍 Scraping Ventura County, CA (5/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-5
+2025-08-05 18:12:45,426 - INFO - 💤 Waiting 2.1s before next request...
+2025-08-05 18:12:49,077 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:12:49,077 - INFO - 🔍 Scraping Ventura County, CA (6/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-6
+2025-08-05 18:12:49,077 - INFO - 💤 Waiting 3.4s before next request...
+2025-08-05 18:12:54,163 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:12:54,163 - INFO - 🔍 Scraping Ventura County, CA (7/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-7
+2025-08-05 18:12:54,163 - INFO - 💤 Waiting 2.9s before next request...
+2025-08-05 18:12:58,633 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:12:58,633 - INFO - 🔍 Scraping Ventura County, CA (8/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-8
+2025-08-05 18:12:58,633 - INFO - 💤 Waiting 2.3s before next request...
+2025-08-05 18:13:02,278 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:13:02,279 - INFO - 🔍 Scraping Ventura County, CA (9/18): https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-9
+2025-08-05 18:13:02,279 - INFO - 💤 Waiting 3.2s before next request...
+2025-08-05 18:13:06,939 - INFO - ✅ Ventura County, CA: 0 new properties found
+2025-08-05 18:13:06,939 - INFO - 🔍 Scraping Riverside County, CA (10/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-1
+2025-08-05 18:13:06,940 - INFO - 💤 Waiting 3.3s before next request...
+2025-08-05 18:13:10,748 - INFO - ✅ Riverside County, CA: 42 new properties found
+2025-08-05 18:13:10,748 - INFO - 🔍 Scraping Riverside County, CA (11/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-2
+2025-08-05 18:13:10,749 - INFO - 💤 Waiting 2.1s before next request...
+2025-08-05 18:13:16,445 - INFO - ✅ Riverside County, CA: 39 new properties found
+2025-08-05 18:13:16,446 - INFO - 🔍 Scraping Riverside County, CA (12/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-3
+2025-08-05 18:13:16,446 - INFO - 💤 Waiting 2.7s before next request...
+2025-08-05 18:13:20,816 - INFO - ✅ Riverside County, CA: 39 new properties found
+2025-08-05 18:13:20,816 - INFO - 🔍 Scraping Riverside County, CA (13/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-4
+2025-08-05 18:13:20,816 - INFO - 💤 Waiting 3.6s before next request...
+2025-08-05 18:13:26,173 - INFO - ✅ Riverside County, CA: 40 new properties found
+2025-08-05 18:13:26,173 - INFO - 🔍 Scraping Riverside County, CA (14/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-5
+2025-08-05 18:13:26,173 - INFO - 💤 Waiting 2.1s before next request...
+2025-08-05 18:13:29,655 - INFO - ✅ Riverside County, CA: 7 new properties found
+2025-08-05 18:13:29,656 - INFO - 🔍 Scraping Riverside County, CA (15/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-6
+2025-08-05 18:13:29,656 - INFO - 💤 Waiting 2.7s before next request...
+2025-08-05 18:13:34,108 - INFO - ✅ Riverside County, CA: 0 new properties found
+2025-08-05 18:13:34,108 - INFO - 🔍 Scraping Riverside County, CA (16/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-7
+2025-08-05 18:13:34,108 - INFO - 💤 Waiting 3.6s before next request...
+2025-08-05 18:13:39,392 - INFO - ✅ Riverside County, CA: 0 new properties found
+2025-08-05 18:13:39,392 - INFO - 🔍 Scraping Riverside County, CA (17/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-8
+2025-08-05 18:13:39,393 - INFO - 💤 Waiting 3.9s before next request...
+2025-08-05 18:13:46,220 - INFO - ✅ Riverside County, CA: 0 new properties found
+2025-08-05 18:13:46,221 - INFO - 🔍 Scraping Riverside County, CA (18/18): https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-9
+2025-08-05 18:13:46,221 - INFO - 💤 Waiting 3.0s before next request...
+2025-08-05 18:13:50,891 - INFO - ✅ Riverside County, CA: 0 new properties found
+2025-08-05 18:13:52,242 - INFO - ✅ Inserted 181 new properties to MongoDB
+2025-08-05 18:13:52,243 - INFO - 
+==================================================
+2025-08-05 18:13:52,243 - INFO - SCRAPING SESSION SUMMARY
+2025-08-05 18:13:52,243 - INFO - ==================================================
+2025-08-05 18:13:52,243 - INFO - 📊 Pages scraped successfully: 18
+2025-08-05 18:13:52,243 - INFO - ⚠️ Pages with errors: 0
+2025-08-05 18:13:52,244 - INFO - 🏠 New properties found: 181
+2025-08-05 18:13:52,244 - INFO - 🔄 Duplicates avoided: 0 existing
+2025-08-05 18:13:52,244 - INFO - 💾 Database operation: ✅ SUCCESS
+2025-08-05 18:13:52,244 - INFO - 🔍 Scraping operation: ✅ SUCCESS
+2025-08-05 18:13:52,244 - INFO - 🎉 OVERALL STATUS: SUCCESS
+2025-08-05 18:13:52,244 - INFO - 📋 Log file saved as: logging\nhs\scraper_log_20250805_181229.log
+2025-08-05 18:13:52,244 - INFO - ==================================================
+2025-08-05 18:13:52,315 - INFO - 🔌 MongoDB connection closed
+2025-08-05 18:13:52,317 - INFO - 🔌 curl_cffi session closed
