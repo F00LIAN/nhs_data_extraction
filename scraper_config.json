@@ -1,0 +1,31 @@
+{
+  "newhomesource": {
+    "base_url": "https://www.newhomesource.com/communities",
+    "locations": [
+      {
+        "state": "ca",
+        "area_region": "ventura-area",
+        "specific_location": "ventura-county",
+        "display_name": "Ventura County, CA"
+      },
+      {
+        "state": "ca", 
+        "area_region": "riverside-san-bernardino-area",
+        "specific_location": "riverside-county",
+        "display_name": "Riverside County, CA"
+      }
+    ],
+    "pagination": {
+      "start_page": 1,
+      "end_page": 9,
+      "url_pattern": "page-{page}"
+    },
+    "request_settings": {
+      "page_delay_min": 2.0,
+      "page_delay_max": 4.0,
+      "max_retries": 3,
+      "base_delay": 2,
+      "max_delay": 30
+    }
+  }
+}

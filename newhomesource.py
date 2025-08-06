@@ -13,6 +13,7 @@ import io
 import time
 import random
 import argparse
+from url_generator import URLGenerator
 
 # Force UTF-8 encoding for console output on Windows
 if sys.platform.startswith('win'):
@@ -258,28 +259,38 @@ def scrape_newhomesource(browser_impersonation="chrome"):
     pages_scraped = 0
     pages_with_errors = 0
     
+    # Generate URLs using configuration
+    url_generator = URLGenerator()
+    urls_to_scrape = url_generator.generate_urls()
+    request_settings = url_generator.get_request_settings()
+    
+    logger.info(f"📊 Generated {len(urls_to_scrape)} URLs across {len(set(url[1]['display_name'] for url in urls_to_scrape))} locations")
+    
     # Scraping loop with retry logic and request delays
-    for page in range(1, 10):
-        logger.info(f"🔍 Scraping page {page}...")
+    for idx, (url, location_info) in enumerate(urls_to_scrape, 1):
+        logger.info(f"🔍 Scraping {location_info['display_name']} ({idx}/{len(urls_to_scrape)}): {url}")
         
-        # Add delay between page requests (except for first page)
-        if page > 1:
-            page_delay = random.uniform(2.0, 4.0)  # Random delay between 2-4 seconds
-            logger.info(f"💤 Waiting {page_delay:.1f}s before next page request...")
+        # Add delay between requests (except for first request)
+        if idx > 1:
+            page_delay = random.uniform(request_settings['page_delay_min'], request_settings['page_delay_max'])
+            logger.info(f"💤 Waiting {page_delay:.1f}s before next request...")
             time.sleep(page_delay)
         
         try:
-            url = f"https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/menifee/page-{page}"
-            response = retry_request(url, session, max_retries=3, base_delay=2, max_delay=30, logger=logger)
+            response = retry_request(url, session, 
+                                   max_retries=request_settings['max_retries'], 
+                                   base_delay=request_settings['base_delay'], 
+                                   max_delay=request_settings['max_delay'], 
+                                   logger=logger)
             
             if response is None:
-                error_msg = f"❌ Failed to get response for page {page} after all retries"
+                error_msg = f"❌ Failed to get response for {url} after all retries"
                 logger.error(error_msg)
                 pages_with_errors += 1
                 continue
             
             if response.status_code != 200:
-                error_msg = f"❌ HTTP {response.status_code} error on page {page}"
+                error_msg = f"❌ HTTP {response.status_code} error for {url}"
                 logger.warning(error_msg)
                 pages_with_errors += 1
                 continue
@@ -299,21 +310,22 @@ def scrape_newhomesource(browser_impersonation="chrome"):
                         document = {
                             "property_id": property_id,
                             "scraped_at": datetime.now(),
-                            "source_page": page,
+                            "source_url": url,
+                            "location_info": location_info,
                             "property_data": data
                         }
                         new_documents.append(document)
                         page_new_count += 1
                         
                 except json.JSONDecodeError as e:
-                    logger.debug(f"⚠️ JSON decode error on page {page}: {e}")
+                    logger.debug(f"⚠️ JSON decode error for {url}: {e}")
                     continue
             
-            logger.info(f"✅ Page {page}: {page_new_count} new properties found")
+            logger.info(f"✅ {location_info['display_name']}: {page_new_count} new properties found")
             pages_scraped += 1
             
         except Exception as e:
-            error_msg = f"❌ Error scraping page {page}: {e}"
+            error_msg = f"❌ Error scraping {url}: {e}"
             logger.error(error_msg)
             errors.append(error_msg)
             pages_with_errors += 1
