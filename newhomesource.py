@@ -14,6 +14,7 @@ import time
 import random
 import argparse
 from url_generator import URLGenerator
+from price_history import save_scraped_prices
 
 # Force UTF-8 encoding for console output on Windows
 if sys.platform.startswith('win'):
@@ -255,6 +256,7 @@ def scrape_newhomesource(browser_impersonation="chrome"):
         existing_ids = set()
 
     scraped_properties = set()
+    all_scraped_documents = []  # Store ALL scraped data for price history
     new_documents = []
     pages_scraped = 0
     pages_with_errors = 0
@@ -304,7 +306,7 @@ def scrape_newhomesource(browser_impersonation="chrome"):
                     data = json.loads(script.text)
                     property_id = get_property_id(data)
                     
-                    if property_id and property_id not in scraped_properties and property_id not in existing_ids:
+                    if property_id and property_id not in scraped_properties:
                         scraped_properties.add(property_id)
                         
                         # Extract county from display_name (e.g., "Riverside County, CA" -> "Riverside County")
@@ -318,8 +320,14 @@ def scrape_newhomesource(browser_impersonation="chrome"):
                             "county": county,
                             "property_data": data
                         }
-                        new_documents.append(document)
-                        page_new_count += 1
+                        
+                        # Add to ALL scraped documents for price history
+                        all_scraped_documents.append(document)
+                        
+                        # Only add to new_documents if not a duplicate
+                        if property_id not in existing_ids:
+                            new_documents.append(document)
+                            page_new_count += 1
                         
                 except json.JSONDecodeError as e:
                     logger.debug(f"⚠️ JSON decode error for {url}: {e}")
@@ -337,6 +345,15 @@ def scrape_newhomesource(browser_impersonation="chrome"):
 
     # Determine scraping success
     scraping_success = pages_scraped > 0 and pages_with_errors < pages_scraped
+    
+    # Save price history FIRST (all scraped properties, including duplicates)
+    if client and all_scraped_documents:
+        try:
+            logger.info("📊 Saving price history for all scraped properties...")
+            price_history_count = save_scraped_prices(all_scraped_documents, logger)
+            logger.info(f"✅ Price history saved: {price_history_count} records")
+        except Exception as e:
+            logger.error(f"⚠️ Error saving price history: {e}")
     
     # Insert new documents to MongoDB
     if client and new_documents:
@@ -361,8 +378,9 @@ def scrape_newhomesource(browser_impersonation="chrome"):
     logger.info("=" * 50)
     logger.info(f"📊 Pages scraped successfully: {pages_scraped}")
     logger.info(f"⚠️ Pages with errors: {pages_with_errors}")
-    logger.info(f"🏠 New properties found: {len(new_documents)}")
-    logger.info(f"🔄 Duplicates avoided: {len(existing_ids)} existing")
+    logger.info(f"🏠 New properties found for Home Page DB: {len(new_documents)}")
+    logger.info(f"📊 Total properties scraped to Price History DB: {len(all_scraped_documents)}")
+    logger.info(f"🔄 Duplicates avoided for Home Page DB: {len(existing_ids)} existing")
     logger.info(f"💾 Database operation: {'✅ SUCCESS' if db_success else '❌ FAILED'}")
     logger.info(f"🔍 Scraping operation: {'✅ SUCCESS' if scraping_success else '❌ FAILED'}")
     
@@ -383,6 +401,8 @@ def scrape_newhomesource(browser_impersonation="chrome"):
     
     logger.info(f"📋 Log file saved as: {log_filename}")
     logger.info("=" * 50)
+    
+    # Price history already saved above - no additional snapshots needed
     
     if client:
         client.close()
