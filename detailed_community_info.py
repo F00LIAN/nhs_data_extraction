@@ -71,6 +71,28 @@ class PropertyDataExtractor:
     """Handles extraction and parsing of property data from JSON-LD schemas."""
     
     @staticmethod
+    def extract_status(div_element: Any) -> Optional[str]:
+        """
+        Extract status from nhs-c-card__statuses div.
+        
+        Args:
+            div_element: BeautifulSoup div element containing property data
+            
+        Returns:
+            Status text or None if not found
+        """
+        try:
+            status_div = div_element.find("div", class_="nhs-c-card__statuses")
+            if status_div:
+                status_span = status_div.find("span")
+                if status_span and status_span.get_text(strip=True):
+                    return status_span.get_text(strip=True)
+        except Exception as e:
+            logging.warning(f"Failed to extract status: {e}")
+        
+        return None
+    
+    @staticmethod
     def extract_property_data(div_element: Any) -> Optional[Dict[str, Any]]:
         """
         Extract property data from a housing div element.
@@ -106,12 +128,17 @@ class PropertyDataExtractor:
                 logging.warning(f"Failed to parse JSON-LD script: {e}")
                 continue
         
-        # Add build type classification if we have a URL
+        # Add build type classification and status if we have a URL
         if property_data and property_data.get("url"):
             url = property_data["url"]
             build_type = BuildTypeClassifier.determine_build_type(url)
             property_data["build_type"] = build_type
             property_data["build_type_description"] = BuildTypeClassifier.get_build_type_description(build_type)
+            
+            # Extract status
+            status = PropertyDataExtractor.extract_status(div_element)
+            if status:
+                property_data["status"] = status
         
         return property_data if property_data else None
     
