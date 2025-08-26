@@ -52,6 +52,30 @@ jobs:
         pip install -r requirements.txt
       working-directory: .
         
+    - name: Test MongoDB connection
+      env:
+        MONGO_DB_USERNAME: ${{ secrets.MONGO_DB_USERNAME }}
+        MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
+        MONGO_DB_URI: mongodb+srv://${{ secrets.MONGO_DB_USERNAME }}:${{ secrets.MONGO_DB_PASSWORD }}@newhomesourcedata.6gdo85y.mongodb.net/?retryWrites=true&w=majority&appName=NewHomeSourceData
+      run: |
+        echo "🔍 Testing MongoDB connection..."
+        echo "Hostname resolution test:"
+        nslookup newhomesourcedata.6gdo85y.mongodb.net || echo "❌ DNS resolution failed"
+        ping -c 1 newhomesourcedata.6gdo85y.mongodb.net || echo "❌ Ping failed"
+        
+        echo "🔍 Testing MongoDB with Python..."
+        python -c "
+        import os
+        from pymongo import MongoClient
+        try:
+            client = MongoClient(os.getenv('MONGO_DB_URI'), serverSelectionTimeoutMS=5000)
+            client.admin.command('ping')
+            print('✅ MongoDB connection successful')
+        except Exception as e:
+            print(f'❌ MongoDB connection failed: {e}')
+        "
+      working-directory: .
+        
     - name: Validate modular structure
       run: |
         echo "🔍 Validating modular scraper structure..."
@@ -96,7 +120,7 @@ jobs:
       env:
         MONGO_DB_USERNAME: ${{ secrets.MONGO_DB_USERNAME }}
         MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
-        MONGO_DB_URI: mongodb+srv://${{ secrets.MONGO_DB_USERNAME }}:${{ secrets.MONGO_DB_PASSWORD }}@cluster0.lz6kt.mongodb.net/newhomesource?retryWrites=true&w=majority&appName=Cluster0
+        MONGO_DB_URI: mongodb+srv://${{ secrets.MONGO_DB_USERNAME }}:${{ secrets.MONGO_DB_PASSWORD }}@newhomesourcedata.6gdo85y.mongodb.net/?retryWrites=true&w=majority&appName=NewHomeSourceData
       run: |
         # Get input parameters (with defaults for scheduled runs)
         STAGE="${{ github.event.inputs.stage || 'full' }}"
