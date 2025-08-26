@@ -50,7 +50,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-      working-directory: src/scraper
+      working-directory: .
         
     - name: Validate modular structure
       run: |
@@ -89,7 +89,7 @@ jobs:
         done
         
         echo "✅ Modular structure validation complete"
-      working-directory: src/scraper
+      working-directory: .
         
     - name: Run NewHomeSource modular scraper
       id: scraper
@@ -195,7 +195,7 @@ jobs:
         
         echo "SCRAPER_EXIT_CODE=$FINAL_EXIT_CODE" >> $GITHUB_OUTPUT
         exit $FINAL_EXIT_CODE
-      working-directory: src/scraper
+      working-directory: .              
         
     - name: Check modular scraper results
       run: |
