@@ -25,7 +25,8 @@
       "page_delay_max": 4.0,
       "max_retries": 3,
       "base_delay": 2,
-      "max_delay": 30
+      "max_delay": 30,
+      "impersonation": "chrome"
     }
   }
 }

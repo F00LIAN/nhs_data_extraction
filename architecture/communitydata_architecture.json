@@ -1,0 +1,26 @@
+{
+  "_id": {
+    "$oid": "68a8f72550c162c504d5ecd5"
+  },
+  "listing_id": "https://www.newhomesource.com/community/ca/oxnard/oxford-flats-by-oakwood-communities-inc/124517_Oxford_Flats_subdivision_by_Oakwood_Communities_Inc.",
+  "community_data": {
+    "communities": [
+      {
+        "build_status": [
+          "Hot Deal",
+          "Move-In Ready"
+        ],
+        "name": "Oxford Flats Plan 1",
+        "url": "https://www.newhomesource.com/specdetail/2850-wagon-wheel-road-oxnard-ca-93036/2373946",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Oakwo49986/97451241-250723.jpg",
+        "build_type": "spec",
+        "price": "700373",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/specdetail/2850-wagon-wheel-road-oxnard-ca-93036/2373946_Oxford_Flats_Plan_1",
+        "card_index": 0
+      }
+    ]
+  },
+  "scraped_at": "2025-08-22T16:16:02.210421",
+  "total_communities_found": 1
+}

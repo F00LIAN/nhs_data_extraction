@@ -1,0 +1,6 @@
+2025-08-23 10:37:38,920 - INFO - Starting NewHomeSource async scraping session
+2025-08-23 10:37:38,920 - INFO - 🌐 Browser impersonation: chrome
+2025-08-23 10:37:38,921 - INFO - 📊 Total URLs to process: 18
+2025-08-23 10:37:39,779 - INFO - ✅ MongoDB connection established
+2025-08-23 10:37:39,927 - INFO - 📊 Found 184 existing listings in database
+2025-08-23 10:37:39,927 - INFO - 🔍 Processing 1/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1 (using chrome)

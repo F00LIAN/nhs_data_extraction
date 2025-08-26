@@ -1,0 +1,65 @@
+{
+  "_id": {
+    "$oid": "68a9e0835802153f38a7eb9d"
+  },
+  "listing_id": "https://www.newhomesource.com/community/ca/temecula/sultana-at-heirloom-farms-by-meritage-homes/170692_Sultana_at_Heirloom_Farms_subdivision_by_Meritage_Homes",
+  "scraped_at": {
+    "$date": "2025-08-23T11:13:28.602Z"
+  },
+  "source_url": "https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-3",
+  "property_data": {
+    "@context": "https://schema.org",
+    "@type": [
+      "Product",
+      "SingleFamilyResidence",
+      "House"
+    ],
+    "name": "Sultana at Heirloom Farms subdivision by Meritage Homes",
+    "image": {
+      "@type": "ImageObject",
+      "name": "Sultana at Heirloom Farms community",
+      "description": "Image of the Sultana at Heirloom Farms subdivision by Meritage Homes",
+      "audience": "Homebuyers",
+      "contentLocation": "Sultana at Heirloom Farms",
+      "copyrightHolder": "Meritage Homes",
+      "creator": "Meritage Homes",
+      "creditText": "Photo Credit: Meritage Homes",
+      "isFamilyFriendly": true,
+      "contentUrl": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/MeritageHom/68550751-230608.jpg"
+    },
+    "url": "https://www.newhomesource.com/community/ca/temecula/sultana-at-heirloom-farms-by-meritage-homes/170692",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Temecula",
+      "addressRegion": "CA",
+      "postalCode": "92591",
+      "streetAddress": "29001 Bucle Prado"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "33.530676",
+      "longitude": "-117.163953"
+    },
+    "itemCondition": "NewCondition",
+    "offers": {
+      "@type": "Offer",
+      "isFamilyFriendly": true,
+      "areaServed": "Temecula",
+      "availability": "LimitedAvailability",
+      "offeredBy": "Meritage Homes",
+      "price": "624000",
+      "priceCurrency": "USD"
+    },
+    "telephone": "888-493-4190",
+    "accommodationCategory": "Condominium"
+  },
+  "data_source": "json_ld",
+  "listing_status": "active",
+  "last_updated": {
+    "$date": "2025-08-23T10:48:21.902Z"
+  },
+  "previous_scraped_at": {
+    "$date": "2025-08-23T10:08:12.975Z"
+  },
+  "previous_data_source": "unknown"
+}

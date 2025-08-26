@@ -22,54 +22,67 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        cd src/scraper
         pip install -r requirements.txt
         
-    - name: Run scraper with browser fallback
+    - name: Run NewHomeSource scraper (Stage 1 + Stage 2)
       id: scraper
       env:
         MONGO_DB_USERNAME: ${{ secrets.MONGO_DB_USERNAME }}
         MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
+        MONGO_DB_URI: mongodb+srv://${{ secrets.MONGO_DB_USERNAME }}:${{ secrets.MONGO_DB_PASSWORD }}@cluster0.lz6kt.mongodb.net/newhomesource?retryWrites=true&w=majority&appName=Cluster0
       run: |
+        cd src/scraper
+        
         # List of browsers to try in order
         BROWSERS=("chrome" "firefox" "safari" "chrome_android" "safari_ios")
         SUCCESS=false
         SUCCESSFUL_BROWSER=""
         FINAL_EXIT_CODE=1
         
-        echo "🔄 Starting scraper with browser fallback protocol"
+        echo "🔄 Starting NewHomeSource full extraction with browser fallback"
         echo "📋 Browser order: ${BROWSERS[*]}"
+        echo "🎯 Running Stage 1 (listings) + Stage 2 (community data) + Price tracking"
         echo ""
         
         for browser in "${BROWSERS[@]}"; do
-          echo "🌐 Attempting scrape with browser: $browser"
+          echo "🌐 Attempting full extraction with browser: $browser"
           echo "========================================"
           
-          if python newhomesource.py --browser "$browser"; then
+          if python run_nhs.py --stage full --max-concurrent 8 --browser "$browser"; then
             echo "✅ SUCCESS with browser: $browser"
             SUCCESS=true
             SUCCESSFUL_BROWSER="$browser"
             FINAL_EXIT_CODE=0
             break
           else
-            echo "❌ FAILED with browser: $browser (exit code: $?)"
+            EXIT_CODE=$?
+            echo "❌ FAILED with browser: $browser (exit code: $EXIT_CODE)"
             echo ""
             
             # Show last few lines of the latest log for debugging
             LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
             if [ -n "$LOG_FILE" ]; then
-              echo "📋 Last 5 lines from $LOG_FILE:"
-              tail -n 5 "$LOG_FILE"
+              echo "📋 Last 10 lines from $LOG_FILE:"
+              tail -n 10 "$LOG_FILE"
               echo ""
             fi
+            
+            # Wait a bit before trying next browser
+            echo "⏳ Waiting 30 seconds before trying next browser..."
+            sleep 30
           fi
         done
         
         echo "========================================"
         if [ "$SUCCESS" = true ]; then
-          echo "🎉 SCRAPER COMPLETED SUCCESSFULLY with browser: $SUCCESSFUL_BROWSER"
+          echo "🎉 NEWHOMESOURCE EXTRACTION COMPLETED SUCCESSFULLY with browser: $SUCCESSFUL_BROWSER"
+          echo "✅ Stage 1 (listings) and Stage 2 (community data) both completed"
+          echo "💰 Price tracking data captured and stored"
           echo "successful_browser=$SUCCESSFUL_BROWSER" >> $GITHUB_OUTPUT
         else
-          echo "💥 SCRAPER FAILED with all browsers: ${BROWSERS[*]}"
+          echo "💥 EXTRACTION FAILED with all browsers: ${BROWSERS[*]}"
+          echo "❌ Both Stage 1 and Stage 2 were attempted but failed"
           echo "successful_browser=none" >> $GITHUB_OUTPUT
         fi
         
@@ -78,7 +91,8 @@ jobs:
         
     - name: Check scraper results
       run: |
-        echo "=== SCRAPER RUN SUMMARY ==="
+        cd src/scraper
+        echo "=== NEWHOMESOURCE EXTRACTION SUMMARY ==="
         
         # Find the latest log file
         LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
@@ -86,31 +100,44 @@ jobs:
         if [ -n "$LOG_FILE" ]; then
           echo "📋 Log file: $LOG_FILE"
           echo ""
-          echo "=== LAST 20 LINES OF LOG ==="
-          tail -n 20 "$LOG_FILE"
+          echo "=== LAST 25 LINES OF LOG ==="
+          tail -n 25 "$LOG_FILE"
           echo ""
           
-          # Check for success/failure indicators
-          if grep -q "🎉 OVERALL STATUS: SUCCESS" "$LOG_FILE"; then
-            echo "✅ SCRAPER STATUS: SUCCESS"
+          # Check for success/failure indicators from both stages
+          STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" || echo "0")
+          STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" || echo "0")
+          OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" || echo "0")
+          
+          if [ "$OVERALL_SUCCESS" -gt 0 ] && [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -gt 0 ]; then
+            echo "✅ EXTRACTION STATUS: FULL SUCCESS"
+            echo "✅ Stage 1 (Listings): COMPLETED"
+            echo "✅ Stage 2 (Community Data): COMPLETED"
             echo "scraper_status=success" >> $GITHUB_OUTPUT
-          elif grep -q "💥 OVERALL STATUS: FAILED" "$LOG_FILE"; then
-            echo "❌ SCRAPER STATUS: FAILED"
+          elif [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -eq 0 ]; then
+            echo "⚠️ EXTRACTION STATUS: PARTIAL SUCCESS"
+            echo "✅ Stage 1 (Listings): COMPLETED"
+            echo "❌ Stage 2 (Community Data): FAILED"
+            echo "scraper_status=partial" >> $GITHUB_OUTPUT
+          elif [ "$STAGE1_SUCCESS" -eq 0 ]; then
+            echo "❌ EXTRACTION STATUS: FAILED"
+            echo "❌ Stage 1 (Listings): FAILED"
+            echo "❌ Stage 2 (Community Data): NOT ATTEMPTED"
             echo "scraper_status=failed" >> $GITHUB_OUTPUT
-            
-            # Show errors if any
-            echo ""
-            echo "=== ERRORS FOUND ==="
-            grep "❌" "$LOG_FILE" || echo "No specific errors found in log"
           else
-            echo "⚠️ SCRAPER STATUS: UNKNOWN"
+            echo "⚠️ EXTRACTION STATUS: UNKNOWN"
             echo "scraper_status=unknown" >> $GITHUB_OUTPUT
           fi
           
-          # Extract statistics
+          # Show errors if any
           echo ""
-          echo "=== STATISTICS ==="
-          grep -E "(📊|🏠|⚠️|💾|🔍)" "$LOG_FILE" | tail -n 5
+          echo "=== ERRORS FOUND ==="
+          grep "❌" "$LOG_FILE" | head -n 10 || echo "No specific errors found in log"
+          
+          # Extract statistics from both stages
+          echo ""
+          echo "=== STAGE STATISTICS ==="
+          grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄|✅)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error)" | tail -n 10
           
         else
           echo "❌ No log file found - scraper may have failed to start"
@@ -123,36 +150,51 @@ jobs:
       with:
         name: scraper-logs-${{ github.run_number }}
         path: |
-          logging/nhs/scraper_log_*.log
-          logging/nhs/newhomesource_data.json
+          src/scraper/logging/nhs/scraper_log_*.log
         retention-days: 7
         
     - name: Report status in job summary
       if: always()
       run: |
-        echo "# 🏠 NewHomeSource Scraper Report" >> $GITHUB_STEP_SUMMARY
+        cd src/scraper
+        echo "# 🏠 NewHomeSource Full Extraction Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Run Time:** $(date) (Scheduled for 6 AM PST)" >> $GITHUB_STEP_SUMMARY
         echo "**Run Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
         echo "**Successful Browser:** ${{ steps.scraper.outputs.successful_browser }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Extraction Type:** Stage 1 (Listings) + Stage 2 (Community Data) + Price Tracking" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         # Find the latest log file
         LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
         
         if [ -n "$LOG_FILE" ]; then
-          if grep -q "🎉 OVERALL STATUS: SUCCESS" "$LOG_FILE"; then
-            echo "## ✅ Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
-          elif grep -q "💥 OVERALL STATUS: FAILED" "$LOG_FILE"; then
+          # Check for success/failure indicators from both stages
+          STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" || echo "0")
+          STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" || echo "0")
+          OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" || echo "0")
+          
+          if [ "$OVERALL_SUCCESS" -gt 0 ] && [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -gt 0 ]; then
+            echo "## ✅ Status: FULL SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Stage 2 (Community Data): COMPLETED" >> $GITHUB_STEP_SUMMARY
+            echo "- 💰 Price Tracking: ACTIVE" >> $GITHUB_STEP_SUMMARY
+          elif [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -eq 0 ]; then
+            echo "## ⚠️ Status: PARTIAL SUCCESS" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
+            echo "- ❌ Stage 2 (Community Data): FAILED" >> $GITHUB_STEP_SUMMARY
+          elif [ "$STAGE1_SUCCESS" -eq 0 ]; then
             echo "## ❌ Status: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "- ❌ Stage 1 (Listings): FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "- ❌ Stage 2 (Community Data): NOT ATTEMPTED" >> $GITHUB_STEP_SUMMARY
           else
             echo "## ⚠️ Status: UNKNOWN" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Summary Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Extraction Statistics" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          grep -E "(📊|🏠|⚠️|💾|🔍)" "$LOG_FILE" | tail -n 5 >> $GITHUB_STEP_SUMMARY
+          grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error|complete)" | tail -n 8 >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           
           # Show any errors
@@ -172,6 +214,7 @@ jobs:
     - name: Fail job if scraper failed
       if: failure() || steps.scraper.outputs.SCRAPER_EXIT_CODE != '0'
       run: |
-        echo "❌ Scraper failed with exit code: ${{ steps.scraper.outputs.SCRAPER_EXIT_CODE }}"
+        echo "❌ NewHomeSource extraction failed with exit code: ${{ steps.scraper.outputs.SCRAPER_EXIT_CODE }}"
         echo "❌ All browsers failed: chrome, firefox, safari, chrome_android, safari_ios"
+        echo "❌ Check Stage 1 (listings) and Stage 2 (community data) logs for details"
         exit 1

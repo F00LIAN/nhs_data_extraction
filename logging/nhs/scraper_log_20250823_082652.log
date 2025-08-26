@@ -1,0 +1,32 @@
+2025-08-23 08:26:52,985 - INFO - Starting NewHomeSource async scraping session
+2025-08-23 08:26:52,985 - INFO - 🌐 Browser impersonation: chrome
+2025-08-23 08:26:52,985 - INFO - 📊 Total URLs to process: 18
+2025-08-23 08:26:53,939 - INFO - ✅ MongoDB connection established
+2025-08-23 08:26:54,007 - INFO - 📊 Found 0 existing listings in database
+2025-08-23 08:26:54,008 - INFO - 🔍 Processing 1/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1
+2025-08-23 08:27:18,387 - INFO - 🔍 Processing 2/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-2
+2025-08-23 08:27:43,792 - INFO - 🔍 Processing 3/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-3
+2025-08-23 08:28:38,395 - INFO - 🔍 Processing 4/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-4
+2025-08-23 08:29:00,982 - INFO - 🔍 Processing 5/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-5
+2025-08-23 08:29:53,325 - INFO - 🔍 Processing 6/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-6
+2025-08-23 08:30:43,820 - INFO - 🔍 Processing 7/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-7
+2025-08-23 08:31:39,230 - INFO - 🔍 Processing 8/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-8
+2025-08-23 08:32:08,379 - INFO - 🔍 Processing 9/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-9
+2025-08-23 08:32:37,155 - INFO - 🔍 Processing 10/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-1
+2025-08-23 08:32:59,743 - INFO - 🔍 Processing 11/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-2
+2025-08-23 08:33:25,048 - INFO - 🔍 Processing 12/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-3
+2025-08-23 08:33:46,719 - INFO - 🔍 Processing 13/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-4
+2025-08-23 08:34:10,954 - INFO - 🔍 Processing 14/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-5
+2025-08-23 08:34:36,046 - INFO - 🔍 Processing 15/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-6
+2025-08-23 08:35:26,750 - INFO - 🔍 Processing 16/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-7
+2025-08-23 08:35:51,835 - INFO - 🔍 Processing 17/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-8
+2025-08-23 08:36:17,099 - INFO - 🔍 Processing 18/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-9
+2025-08-23 08:36:37,876 - INFO - 🔄 Processing retry queue...
+2025-08-23 08:40:08,460 - INFO - 🔄 Processing failure queue with persistent retry...
+2025-08-23 08:40:08,460 - INFO - ✅ No missing listings detected
+2025-08-23 08:40:08,461 - INFO - 📊 Session complete: 0 success, 18 errors
+2025-08-23 08:40:08,461 - INFO - ❌ Failed URLs: 0
+2025-08-23 08:40:08,461 - INFO - 📦 Missing listings archived: 0
+2025-08-23 08:40:08,461 - INFO - 🔍 Total scraped listings: 0
+2025-08-23 08:40:08,529 - INFO - 🧹 Cleaned up 0 temp documents
+2025-08-23 08:40:08,595 - INFO - 🔌 MongoDB connection closed
