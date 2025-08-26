@@ -50,6 +50,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+      working-directory: src/scraper
         
     - name: Validate modular structure
       run: |
@@ -88,6 +89,7 @@ jobs:
         done
         
         echo "✅ Modular structure validation complete"
+      working-directory: src/scraper
         
     - name: Run NewHomeSource modular scraper
       id: scraper
@@ -96,7 +98,6 @@ jobs:
         MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
         MONGO_DB_URI: mongodb+srv://${{ secrets.MONGO_DB_USERNAME }}:${{ secrets.MONGO_DB_PASSWORD }}@cluster0.lz6kt.mongodb.net/newhomesource?retryWrites=true&w=majority&appName=Cluster0
       run: |
-          
         # Get input parameters (with defaults for scheduled runs)
         STAGE="${{ github.event.inputs.stage || 'full' }}"
         MAX_CONCURRENT="${{ github.event.inputs.max_concurrent || '8' }}"
@@ -194,6 +195,7 @@ jobs:
         
         echo "SCRAPER_EXIT_CODE=$FINAL_EXIT_CODE" >> $GITHUB_OUTPUT
         exit $FINAL_EXIT_CODE
+      working-directory: src/scraper
         
     - name: Check modular scraper results
       run: |
@@ -288,7 +290,7 @@ jobs:
       with:
         name: modular-scraper-logs-${{ github.run_number }}
         path: |
-          logging/nhs/scraper_log_*.log
+          src/scraper/logging/nhs/scraper_log_*.log
         retention-days: 7
         
     - name: Report modular scraper status in job summary
