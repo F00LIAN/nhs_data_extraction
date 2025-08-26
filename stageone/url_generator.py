@@ -7,7 +7,8 @@ class URLGenerator:
     
     def __init__(self, config_path: str = None):
         if config_path is None:
-            config_path = os.path.join(os.path.dirname(__file__), "scraper_config.json")
+            # Look in parent directory (src/scraper) for the config file
+            config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scraper_config.json")
         
         with open(config_path, 'r') as f:
             self.config = json.load(f)
@@ -61,7 +62,8 @@ class URLGenerator:
     def save_config(self, config_path: str = None):
         """Save current configuration to file"""
         if config_path is None:
-            config_path = os.path.join(os.path.dirname(__file__), "scraper_config.json")
+            # Look in parent directory (src/scraper) for the config file
+            config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "scraper_config.json")
         
         with open(config_path, 'w') as f:
             json.dump(self.config, f, indent=2)

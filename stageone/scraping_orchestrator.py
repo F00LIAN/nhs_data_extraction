@@ -174,6 +174,9 @@ class ScrapingOrchestrator:
         
         logger.info("🔄 Processing failure queue with persistent retry...")
         await self.http_fetcher.persistent_failure_retry(max_duration_minutes=30)
+        
+        # Save any remaining failed URLs
+        self.http_fetcher.save_failed_urls()
 
     async def _archive_missing_listings(self, existing_listings: Set[str], all_scraped_listings: Set[str], logger) -> int:
         """

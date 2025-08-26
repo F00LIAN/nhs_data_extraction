@@ -142,7 +142,18 @@ class Stage2Orchestrator:
             await temp_collection.insert_one({"_id": _id, "url": url, "html": html})
             
             # Step 3: Parse HTML
-            extracted_info = self.html_parser.extract_community_data(html, _id)
+            # Extract location data from the property data
+            county = data.get('county')
+            address_locality = data.get('addressLocality')
+            postal_code = data.get('postalCode')
+            
+            extracted_info = self.html_parser.extract_community_data(
+                html=html,
+                homepage_id=_id,
+                address_locality=address_locality,
+                county=county,
+                postal_code=postal_code
+            )
             communities = extracted_info.get("communities", [])
             
             if not communities:
@@ -204,7 +215,19 @@ class Stage2Orchestrator:
                     
                     if status_code == 200 and html:
                         # Parse and store directly (no temp collection in retry)
-                        extracted_info = self.html_parser.extract_community_data(html, _id)
+                        # Need to fetch homepage data for retry to get location info
+                        homepage_data = await self.data_fetcher.get_homepage_data(_id)
+                        if not homepage_data:
+                            logging.warning(f"⚠️ Could not find homepage data for retry of {url}")
+                            continue
+                        
+                        extracted_info = self.html_parser.extract_community_data(
+                            html=html,
+                            homepage_id=_id,
+                            address_locality=homepage_data.get('property_data', {}).get('address', {}).get('addressLocality'),
+                            county=homepage_data.get('property_data', {}).get('address', {}).get('county'),
+                            postal_code=homepage_data.get('property_data', {}).get('address', {}).get('postalCode')
+                        )
                         communities = extracted_info.get("communities", [])
                         
                         if communities and listing_id:

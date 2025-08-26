@@ -257,3 +257,15 @@ class HttpFetcher:
             "retry_queue_size": self.retry_queue.qsize(),
             "retry_attempts": dict(self.retry_attempts)
         }
+
+    def save_failed_urls(self, filepath: str = "failed_urls.json"):
+        """Save failed URLs to file for manual review or re-processing"""
+        if self.failed_urls:
+            import json
+            with open(filepath, 'w') as f:
+                json.dump({
+                    "failed_urls": self.failed_urls,
+                    "timestamp": datetime.now().isoformat(),
+                    "total_failed": len(self.failed_urls)
+                }, f, indent=2)
+            logging.info(f"💾 Saved {len(self.failed_urls)} failed URLs to {filepath}")
