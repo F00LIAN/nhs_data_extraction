@@ -33,7 +33,8 @@
       "addressLocality": "Temecula",
       "addressRegion": "CA",
       "postalCode": "92591",
-      "streetAddress": "29001 Bucle Prado"
+      "streetAddress": "29001 Bucle Prado",
+      "county": "Riverside County"
     },
     "geo": {
       "@type": "GeoCoordinates",

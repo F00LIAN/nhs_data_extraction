@@ -65,3 +65,12 @@ class URLGenerator:
         
         with open(config_path, 'w') as f:
             json.dump(self.config, f, indent=2)
+
+def Generate_URLs():
+    """
+    Generate URLs for the scraper to scrape.
+    """
+    url_generator = URLGenerator()
+    urls_to_scrape = url_generator.generate_urls()
+    request_settings = url_generator.get_request_settings()
+    return urls_to_scrape, request_settings

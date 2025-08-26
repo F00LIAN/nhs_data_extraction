@@ -1,10 +1,37 @@
-name: NewHomeSource Scraper
+name: NewHomeSource Modular Scraper
 
 on:
   schedule:
     # Run once daily at 6 AM PST (2 AM UTC)
     - cron: '0 2 * * *'
   workflow_dispatch: # Allow manual trigger
+    inputs:
+      stage:
+        description: 'Which stage to run'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+        - 'full'
+        - '1'
+        - '2'
+      max_concurrent:
+        description: 'Maximum concurrent requests'
+        required: false
+        default: '8'
+        type: string
+      browser:
+        description: 'Browser to use (if not using fallback)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+        - 'auto'
+        - 'chrome'
+        - 'firefox'
+        - 'safari'
+        - 'chrome_android'
+        - 'safari_ios'
 
 jobs:
   scrape:
@@ -25,7 +52,46 @@ jobs:
         cd src/scraper
         pip install -r requirements.txt
         
-    - name: Run NewHomeSource scraper (Stage 1 + Stage 2)
+    - name: Validate modular structure
+      run: |
+        cd src/scraper
+        echo "🔍 Validating modular scraper structure..."
+        
+        # Check main entry point
+        if [ ! -f "run_nhs.py" ]; then
+          echo "❌ Missing main entry point: run_nhs.py"
+          exit 1
+        fi
+        
+        # Check modular directories
+        for dir in "stageone" "stagetwo" "shared"; do
+          if [ ! -d "$dir" ]; then
+            echo "❌ Missing modular directory: $dir"
+            exit 1
+          fi
+          echo "✅ Found directory: $dir"
+        done
+        
+        # Check key modular files
+        declare -A files=(
+          ["stageone/scraping_orchestrator.py"]="Stage 1 orchestrator"
+          ["stageone/url_generator.py"]="URL generator"
+          ["stagetwo/orchestrator.py"]="Stage 2 orchestrator"
+          ["stagetwo/data_fetcher.py"]="Data fetcher"
+          ["shared/price_tracker.py"]="Price tracker"
+        )
+        
+        for file in "${!files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Missing ${files[$file]}: $file"
+            exit 1
+          fi
+          echo "✅ Found ${files[$file]}"
+        done
+        
+        echo "✅ Modular structure validation complete"
+        
+    - name: Run NewHomeSource modular scraper
       id: scraper
       env:
         MONGO_DB_USERNAME: ${{ secrets.MONGO_DB_USERNAME }}
@@ -34,22 +100,47 @@ jobs:
       run: |
         cd src/scraper
         
-        # List of browsers to try in order
-        BROWSERS=("chrome" "firefox" "safari" "chrome_android" "safari_ios")
+        # Get input parameters (with defaults for scheduled runs)
+        STAGE="${{ github.event.inputs.stage || 'full' }}"
+        MAX_CONCURRENT="${{ github.event.inputs.max_concurrent || '8' }}"
+        BROWSER_INPUT="${{ github.event.inputs.browser || 'auto' }}"
+        
+        echo "🚀 Starting NewHomeSource modular scraper"
+        echo "📊 Configuration:"
+        echo "   Stage: $STAGE"
+        echo "   Max Concurrent: $MAX_CONCURRENT"
+        echo "   Browser Input: $BROWSER_INPUT"
+        echo ""
+        
+        # Determine browser strategy
+        if [ "$BROWSER_INPUT" = "auto" ]; then
+          echo "🔄 Using browser fallback strategy"
+          BROWSERS=("chrome" "firefox" "safari" "chrome_android" "safari_ios")
+          USE_FALLBACK=true
+        else
+          echo "🎯 Using specified browser: $BROWSER_INPUT"
+          BROWSERS=("$BROWSER_INPUT")
+          USE_FALLBACK=false
+        fi
+        
         SUCCESS=false
         SUCCESSFUL_BROWSER=""
         FINAL_EXIT_CODE=1
         
-        echo "🔄 Starting NewHomeSource full extraction with browser fallback"
         echo "📋 Browser order: ${BROWSERS[*]}"
-        echo "🎯 Running Stage 1 (listings) + Stage 2 (community data) + Price tracking"
+        echo "🎯 Running with consolidated run_nhs.py (modular architecture)"
         echo ""
         
         for browser in "${BROWSERS[@]}"; do
-          echo "🌐 Attempting full extraction with browser: $browser"
+          echo "🌐 Attempting extraction with browser: $browser"
           echo "========================================"
           
-          if python run_nhs.py --stage full --max-concurrent 8 --browser "$browser"; then
+          # Build command with enhanced logging
+          CMD="python run_nhs.py --stage $STAGE --max-concurrent $MAX_CONCURRENT --browser $browser --verbose"
+          echo "💻 Command: $CMD"
+          echo ""
+          
+          if $CMD; then
             echo "✅ SUCCESS with browser: $browser"
             SUCCESS=true
             SUCCESSFUL_BROWSER="$browser"
@@ -63,36 +154,59 @@ jobs:
             # Show last few lines of the latest log for debugging
             LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
             if [ -n "$LOG_FILE" ]; then
-              echo "📋 Last 10 lines from $LOG_FILE:"
-              tail -n 10 "$LOG_FILE"
+              echo "📋 Last 15 lines from $LOG_FILE:"
+              tail -n 15 "$LOG_FILE"
               echo ""
             fi
             
-            # Wait a bit before trying next browser
-            echo "⏳ Waiting 30 seconds before trying next browser..."
-            sleep 30
+            # Only wait if using fallback and not the last browser
+            if [ "$USE_FALLBACK" = true ] && [ "$browser" != "${BROWSERS[-1]}" ]; then
+              echo "⏳ Waiting 30 seconds before trying next browser..."
+              sleep 30
+            fi
           fi
         done
         
         echo "========================================"
         if [ "$SUCCESS" = true ]; then
-          echo "🎉 NEWHOMESOURCE EXTRACTION COMPLETED SUCCESSFULLY with browser: $SUCCESSFUL_BROWSER"
-          echo "✅ Stage 1 (listings) and Stage 2 (community data) both completed"
-          echo "💰 Price tracking data captured and stored"
+          echo "🎉 NEWHOMESOURCE MODULAR EXTRACTION COMPLETED SUCCESSFULLY"
+          echo "✅ Browser used: $SUCCESSFUL_BROWSER"
+          echo "📊 Stage completed: $STAGE"
+          if [ "$STAGE" = "full" ]; then
+            echo "✅ Stage 1 (listings) and Stage 2 (community data) both completed"
+            echo "💰 Price tracking data captured and stored"
+          elif [ "$STAGE" = "1" ]; then
+            echo "✅ Stage 1 (listings) completed"
+          elif [ "$STAGE" = "2" ]; then
+            echo "✅ Stage 2 (community data) completed"
+            echo "💰 Price tracking data captured and stored"
+          fi
           echo "successful_browser=$SUCCESSFUL_BROWSER" >> $GITHUB_OUTPUT
+          echo "stage_completed=$STAGE" >> $GITHUB_OUTPUT
         else
-          echo "💥 EXTRACTION FAILED with all browsers: ${BROWSERS[*]}"
-          echo "❌ Both Stage 1 and Stage 2 were attempted but failed"
+          echo "💥 MODULAR EXTRACTION FAILED"
+          echo "❌ Stage attempted: $STAGE"
+          if [ "$USE_FALLBACK" = true ]; then
+            echo "❌ All browsers failed: ${BROWSERS[*]}"
+          else
+            echo "❌ Browser failed: $BROWSER_INPUT"
+          fi
           echo "successful_browser=none" >> $GITHUB_OUTPUT
+          echo "stage_completed=none" >> $GITHUB_OUTPUT
         fi
         
         echo "SCRAPER_EXIT_CODE=$FINAL_EXIT_CODE" >> $GITHUB_OUTPUT
         exit $FINAL_EXIT_CODE
         
-    - name: Check scraper results
+    - name: Check modular scraper results
       run: |
         cd src/scraper
-        echo "=== NEWHOMESOURCE EXTRACTION SUMMARY ==="
+        echo "=== NEWHOMESOURCE MODULAR EXTRACTION SUMMARY ==="
+        
+        # Get stage that was attempted
+        STAGE_ATTEMPTED="${{ steps.scraper.outputs.stage_completed || 'unknown' }}"
+        echo "📊 Stage attempted: $STAGE_ATTEMPTED"
+        echo ""
         
         # Find the latest log file
         LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
@@ -104,26 +218,53 @@ jobs:
           tail -n 25 "$LOG_FILE"
           echo ""
           
-          # Check for success/failure indicators from both stages
+          # Check for success/failure indicators based on modular architecture
           STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" || echo "0")
           STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" || echo "0")
           OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" || echo "0")
+          MODULAR_SUCCESS=$(grep -c "🎉.*completed successfully" "$LOG_FILE" || echo "0")
           
-          if [ "$OVERALL_SUCCESS" -gt 0 ] && [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -gt 0 ]; then
-            echo "✅ EXTRACTION STATUS: FULL SUCCESS"
-            echo "✅ Stage 1 (Listings): COMPLETED"
-            echo "✅ Stage 2 (Community Data): COMPLETED"
-            echo "scraper_status=success" >> $GITHUB_OUTPUT
-          elif [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -eq 0 ]; then
-            echo "⚠️ EXTRACTION STATUS: PARTIAL SUCCESS"
-            echo "✅ Stage 1 (Listings): COMPLETED"
-            echo "❌ Stage 2 (Community Data): FAILED"
-            echo "scraper_status=partial" >> $GITHUB_OUTPUT
-          elif [ "$STAGE1_SUCCESS" -eq 0 ]; then
-            echo "❌ EXTRACTION STATUS: FAILED"
-            echo "❌ Stage 1 (Listings): FAILED"
-            echo "❌ Stage 2 (Community Data): NOT ATTEMPTED"
-            echo "scraper_status=failed" >> $GITHUB_OUTPUT
+          # Determine status based on stage attempted and modular success indicators
+          if [ "$STAGE_ATTEMPTED" = "full" ]; then
+            if [ "$OVERALL_SUCCESS" -gt 0 ] && [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -gt 0 ]; then
+              echo "✅ EXTRACTION STATUS: FULL SUCCESS (Both Stages)"
+              echo "✅ Stage 1 (Listings): COMPLETED"
+              echo "✅ Stage 2 (Community Data): COMPLETED"
+              echo "scraper_status=success" >> $GITHUB_OUTPUT
+            elif [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -eq 0 ]; then
+              echo "⚠️ EXTRACTION STATUS: PARTIAL SUCCESS"
+              echo "✅ Stage 1 (Listings): COMPLETED"
+              echo "❌ Stage 2 (Community Data): FAILED"
+              echo "scraper_status=partial" >> $GITHUB_OUTPUT
+            elif [ "$MODULAR_SUCCESS" -gt 0 ]; then
+              echo "✅ EXTRACTION STATUS: MODULAR SUCCESS"
+              echo "✅ Consolidated modular extraction completed"
+              echo "scraper_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ EXTRACTION STATUS: FAILED"
+              echo "❌ Full extraction failed"
+              echo "scraper_status=failed" >> $GITHUB_OUTPUT
+            fi
+          elif [ "$STAGE_ATTEMPTED" = "1" ]; then
+            if [ "$STAGE1_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ]; then
+              echo "✅ EXTRACTION STATUS: STAGE 1 SUCCESS"
+              echo "✅ Stage 1 (Listings): COMPLETED"
+              echo "scraper_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ EXTRACTION STATUS: STAGE 1 FAILED"
+              echo "❌ Stage 1 (Listings): FAILED"
+              echo "scraper_status=failed" >> $GITHUB_OUTPUT
+            fi
+          elif [ "$STAGE_ATTEMPTED" = "2" ]; then
+            if [ "$STAGE2_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ]; then
+              echo "✅ EXTRACTION STATUS: STAGE 2 SUCCESS"
+              echo "✅ Stage 2 (Community Data): COMPLETED"
+              echo "scraper_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ EXTRACTION STATUS: STAGE 2 FAILED"
+              echo "❌ Stage 2 (Community Data): FAILED"
+              echo "scraper_status=failed" >> $GITHUB_OUTPUT
+            fi
           else
             echo "⚠️ EXTRACTION STATUS: UNKNOWN"
             echo "scraper_status=unknown" >> $GITHUB_OUTPUT
@@ -134,13 +275,13 @@ jobs:
           echo "=== ERRORS FOUND ==="
           grep "❌" "$LOG_FILE" | head -n 10 || echo "No specific errors found in log"
           
-          # Extract statistics from both stages
+          # Extract statistics from modular execution
           echo ""
-          echo "=== STAGE STATISTICS ==="
-          grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄|✅)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error)" | tail -n 10
+          echo "=== MODULAR EXECUTION STATISTICS ==="
+          grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄|✅)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error|completed|stats)" | tail -n 12
           
         else
-          echo "❌ No log file found - scraper may have failed to start"
+          echo "❌ No log file found - modular scraper may have failed to start"
           echo "scraper_status=no_log" >> $GITHUB_OUTPUT
         fi
         
@@ -148,53 +289,80 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: scraper-logs-${{ github.run_number }}
+        name: modular-scraper-logs-${{ github.run_number }}
         path: |
           src/scraper/logging/nhs/scraper_log_*.log
         retention-days: 7
         
-    - name: Report status in job summary
+    - name: Report modular scraper status in job summary
       if: always()
       run: |
         cd src/scraper
-        echo "# 🏠 NewHomeSource Full Extraction Report" >> $GITHUB_STEP_SUMMARY
+        echo "# 🏠 NewHomeSource Modular Extraction Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Run Time:** $(date) (Scheduled for 6 AM PST)" >> $GITHUB_STEP_SUMMARY
         echo "**Run Number:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
         echo "**Successful Browser:** ${{ steps.scraper.outputs.successful_browser }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Extraction Type:** Stage 1 (Listings) + Stage 2 (Community Data) + Price Tracking" >> $GITHUB_STEP_SUMMARY
+        echo "**Stage Completed:** ${{ steps.scraper.outputs.stage_completed }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Architecture:** Modular (stageone + stagetwo + shared)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
         # Find the latest log file
         LOG_FILE=$(ls -t logging/nhs/scraper_log_*.log 2>/dev/null | head -n1)
         
         if [ -n "$LOG_FILE" ]; then
-          # Check for success/failure indicators from both stages
+          # Check for success/failure indicators based on modular architecture
           STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" || echo "0")
           STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" || echo "0")
           OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" || echo "0")
+          MODULAR_SUCCESS=$(grep -c "🎉.*completed successfully" "$LOG_FILE" || echo "0")
+          STAGE_ATTEMPTED="${{ steps.scraper.outputs.stage_completed }}"
           
-          if [ "$OVERALL_SUCCESS" -gt 0 ] && [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -gt 0 ]; then
-            echo "## ✅ Status: FULL SUCCESS" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Stage 2 (Community Data): COMPLETED" >> $GITHUB_STEP_SUMMARY
-            echo "- 💰 Price Tracking: ACTIVE" >> $GITHUB_STEP_SUMMARY
-          elif [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -eq 0 ]; then
-            echo "## ⚠️ Status: PARTIAL SUCCESS" >> $GITHUB_STEP_SUMMARY
-            echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
-            echo "- ❌ Stage 2 (Community Data): FAILED" >> $GITHUB_STEP_SUMMARY
-          elif [ "$STAGE1_SUCCESS" -eq 0 ]; then
-            echo "## ❌ Status: FAILED" >> $GITHUB_STEP_SUMMARY
-            echo "- ❌ Stage 1 (Listings): FAILED" >> $GITHUB_STEP_SUMMARY
-            echo "- ❌ Stage 2 (Community Data): NOT ATTEMPTED" >> $GITHUB_STEP_SUMMARY
+          # Determine status based on stage attempted and modular success indicators
+          if [ "$STAGE_ATTEMPTED" = "full" ]; then
+            if [ "$OVERALL_SUCCESS" -gt 0 ] && [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -gt 0 ]; then
+              echo "## ✅ Status: FULL SUCCESS (Both Stages)" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Stage 2 (Community Data): COMPLETED" >> $GITHUB_STEP_SUMMARY
+              echo "- 💰 Price Tracking: ACTIVE" >> $GITHUB_STEP_SUMMARY
+            elif [ "$MODULAR_SUCCESS" -gt 0 ]; then
+              echo "## ✅ Status: MODULAR SUCCESS" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Consolidated modular extraction completed" >> $GITHUB_STEP_SUMMARY
+              echo "- 💰 Price Tracking: ACTIVE" >> $GITHUB_STEP_SUMMARY
+            elif [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -eq 0 ]; then
+              echo "## ⚠️ Status: PARTIAL SUCCESS" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
+              echo "- ❌ Stage 2 (Community Data): FAILED" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## ❌ Status: FAILED" >> $GITHUB_STEP_SUMMARY
+              echo "- ❌ Full extraction failed" >> $GITHUB_STEP_SUMMARY
+            fi
+          elif [ "$STAGE_ATTEMPTED" = "1" ]; then
+            if [ "$STAGE1_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ]; then
+              echo "## ✅ Status: STAGE 1 SUCCESS" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## ❌ Status: STAGE 1 FAILED" >> $GITHUB_STEP_SUMMARY
+              echo "- ❌ Stage 1 (Listings): FAILED" >> $GITHUB_STEP_SUMMARY
+            fi
+          elif [ "$STAGE_ATTEMPTED" = "2" ]; then
+            if [ "$STAGE2_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ]; then
+              echo "## ✅ Status: STAGE 2 SUCCESS" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Stage 2 (Community Data): COMPLETED" >> $GITHUB_STEP_SUMMARY
+              echo "- 💰 Price Tracking: ACTIVE" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "## ❌ Status: STAGE 2 FAILED" >> $GITHUB_STEP_SUMMARY
+              echo "- ❌ Stage 2 (Community Data): FAILED" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "## ⚠️ Status: UNKNOWN" >> $GITHUB_STEP_SUMMARY
+            echo "- ⚠️ Stage attempted: $STAGE_ATTEMPTED" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Extraction Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Modular Execution Statistics" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error|complete)" | tail -n 8 >> $GITHUB_STEP_SUMMARY
+          grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄|✅)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error|completed|stats)" | tail -n 10 >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           
           # Show any errors
@@ -208,13 +376,15 @@ jobs:
           
         else
           echo "## ❌ Status: NO LOG FILE" >> $GITHUB_STEP_SUMMARY
-          echo "Scraper failed to generate log file." >> $GITHUB_STEP_SUMMARY
+          echo "Modular scraper failed to generate log file." >> $GITHUB_STEP_SUMMARY
         fi
         
-    - name: Fail job if scraper failed
+    - name: Fail job if modular scraper failed
       if: failure() || steps.scraper.outputs.SCRAPER_EXIT_CODE != '0'
       run: |
-        echo "❌ NewHomeSource extraction failed with exit code: ${{ steps.scraper.outputs.SCRAPER_EXIT_CODE }}"
-        echo "❌ All browsers failed: chrome, firefox, safari, chrome_android, safari_ios"
-        echo "❌ Check Stage 1 (listings) and Stage 2 (community data) logs for details"
+        echo "❌ NewHomeSource modular extraction failed with exit code: ${{ steps.scraper.outputs.SCRAPER_EXIT_CODE }}"
+        echo "❌ Stage attempted: ${{ steps.scraper.outputs.stage_completed || 'unknown' }}"
+        echo "❌ Successful browser: ${{ steps.scraper.outputs.successful_browser || 'none' }}"
+        echo "❌ Architecture: Modular (stageone + stagetwo + shared)"
+        echo "❌ Check modular extraction logs for details"
         exit 1
