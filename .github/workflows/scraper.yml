@@ -49,12 +49,10 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        cd src/scraper
         pip install -r requirements.txt
         
     - name: Validate modular structure
       run: |
-        cd src/scraper
         echo "🔍 Validating modular scraper structure..."
         
         # Check main entry point
@@ -98,8 +96,7 @@ jobs:
         MONGO_DB_PASSWORD: ${{ secrets.MONGO_DB_PASSWORD }}
         MONGO_DB_URI: mongodb+srv://${{ secrets.MONGO_DB_USERNAME }}:${{ secrets.MONGO_DB_PASSWORD }}@cluster0.lz6kt.mongodb.net/newhomesource?retryWrites=true&w=majority&appName=Cluster0
       run: |
-        cd src/scraper
-        
+          
         # Get input parameters (with defaults for scheduled runs)
         STAGE="${{ github.event.inputs.stage || 'full' }}"
         MAX_CONCURRENT="${{ github.event.inputs.max_concurrent || '8' }}"
@@ -200,7 +197,7 @@ jobs:
         
     - name: Check modular scraper results
       run: |
-        cd src/scraper
+       
         echo "=== NEWHOMESOURCE MODULAR EXTRACTION SUMMARY ==="
         
         # Get stage that was attempted
@@ -291,13 +288,12 @@ jobs:
       with:
         name: modular-scraper-logs-${{ github.run_number }}
         path: |
-          src/scraper/logging/nhs/scraper_log_*.log
+          logging/nhs/scraper_log_*.log
         retention-days: 7
         
     - name: Report modular scraper status in job summary
       if: always()
       run: |
-        cd src/scraper
         echo "# 🏠 NewHomeSource Modular Extraction Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Run Time:** $(date) (Scheduled for 6 AM PST)" >> $GITHUB_STEP_SUMMARY
