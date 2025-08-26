@@ -242,10 +242,16 @@ jobs:
           echo ""
           
           # Check for success/failure indicators based on modular architecture
-          STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" || echo "0")
-          STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" || echo "0")
-          OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" || echo "0")
-          MODULAR_SUCCESS=$(grep -c "🎉.*completed successfully" "$LOG_FILE" || echo "0")
+          STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" 2>/dev/null || echo "0")
+          STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" 2>/dev/null || echo "0")
+          OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" 2>/dev/null || echo "0")
+          MODULAR_SUCCESS=$(grep -c "🎉.*completed successfully" "$LOG_FILE" 2>/dev/null || echo "0")
+          
+          # Additional success indicators for the actual workflow patterns
+          SESSION_SUCCESS=$(grep -c "🎯 Session status: SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
+          CLEANUP_SUCCESS=$(grep -c "🧹 Cleanup complete" "$LOG_FILE" 2>/dev/null || echo "0")
+          DB_CLOSED=$(grep -c "🔌 Database connection closed" "$LOG_FILE" 2>/dev/null || echo "0")
+          TOTAL_LISTINGS=$(grep "🔍 Total scraped listings:" "$LOG_FILE" 2>/dev/null | tail -1 | grep -o '[0-9]\+' || echo "0")
           
           # Determine status based on stage attempted and modular success indicators
           if [ "$STAGE_ATTEMPTED" = "full" ]; then
@@ -253,6 +259,11 @@ jobs:
               echo "✅ EXTRACTION STATUS: FULL SUCCESS (Both Stages)"
               echo "✅ Stage 1 (Listings): COMPLETED"
               echo "✅ Stage 2 (Community Data): COMPLETED"
+              echo "scraper_status=success" >> $GITHUB_OUTPUT
+            elif [ "$SESSION_SUCCESS" -gt 0 ] && [ "$CLEANUP_SUCCESS" -gt 0 ] && [ "$DB_CLOSED" -gt 0 ] && [ "$TOTAL_LISTINGS" -gt 0 ]; then
+              echo "✅ EXTRACTION STATUS: SESSION SUCCESS"
+              echo "✅ Scraper completed successfully with $TOTAL_LISTINGS listings"
+              echo "✅ Session completed with cleanup and database closure"
               echo "scraper_status=success" >> $GITHUB_OUTPUT
             elif [ "$STAGE1_SUCCESS" -gt 0 ] && [ "$STAGE2_SUCCESS" -eq 0 ]; then
               echo "⚠️ EXTRACTION STATUS: PARTIAL SUCCESS"
@@ -269,9 +280,9 @@ jobs:
               echo "scraper_status=failed" >> $GITHUB_OUTPUT
             fi
           elif [ "$STAGE_ATTEMPTED" = "1" ]; then
-            if [ "$STAGE1_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ]; then
+            if [ "$STAGE1_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ] || ([ "$SESSION_SUCCESS" -gt 0 ] && [ "$TOTAL_LISTINGS" -gt 0 ]); then
               echo "✅ EXTRACTION STATUS: STAGE 1 SUCCESS"
-              echo "✅ Stage 1 (Listings): COMPLETED"
+              echo "✅ Stage 1 (Listings): COMPLETED with $TOTAL_LISTINGS listings"
               echo "scraper_status=success" >> $GITHUB_OUTPUT
             else
               echo "❌ EXTRACTION STATUS: STAGE 1 FAILED"
@@ -314,7 +325,7 @@ jobs:
       with:
         name: modular-scraper-logs-${{ github.run_number }}
         path: |
-          src/scraper/logging/nhs/scraper_log_*.log
+          logging/nhs/scraper_log_*.log
         retention-days: 7
         
     - name: Report modular scraper status in job summary
@@ -334,10 +345,14 @@ jobs:
         
         if [ -n "$LOG_FILE" ]; then
           # Check for success/failure indicators based on modular architecture
-          STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" || echo "0")
-          STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" || echo "0")
-          OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" || echo "0")
-          MODULAR_SUCCESS=$(grep -c "🎉.*completed successfully" "$LOG_FILE" || echo "0")
+          STAGE1_SUCCESS=$(grep -c "🏁 Stage 1 Extraction Complete!" "$LOG_FILE" 2>/dev/null || echo "0")
+          STAGE2_SUCCESS=$(grep -c "🏁 Stage 2 Extraction Complete!" "$LOG_FILE" 2>/dev/null || echo "0")
+          OVERALL_SUCCESS=$(grep -c "🎊 FULL EXTRACTION SUMMARY" "$LOG_FILE" 2>/dev/null || echo "0")
+          MODULAR_SUCCESS=$(grep -c "🎉.*completed successfully" "$LOG_FILE" 2>/dev/null || echo "0")
+          SESSION_SUCCESS=$(grep -c "🎯 Session status: SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
+          CLEANUP_SUCCESS=$(grep -c "🧹 Cleanup complete" "$LOG_FILE" 2>/dev/null || echo "0")
+          DB_CLOSED=$(grep -c "🔌 Database connection closed" "$LOG_FILE" 2>/dev/null || echo "0")
+          TOTAL_LISTINGS=$(grep "🔍 Total scraped listings:" "$LOG_FILE" 2>/dev/null | tail -1 | grep -o '[0-9]\+' || echo "0")
           STAGE_ATTEMPTED="${{ steps.scraper.outputs.stage_completed }}"
           
           # Determine status based on stage attempted and modular success indicators
@@ -346,6 +361,11 @@ jobs:
               echo "## ✅ Status: FULL SUCCESS (Both Stages)" >> $GITHUB_STEP_SUMMARY
               echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
               echo "- ✅ Stage 2 (Community Data): COMPLETED" >> $GITHUB_STEP_SUMMARY
+              echo "- 💰 Price Tracking: ACTIVE" >> $GITHUB_STEP_SUMMARY
+            elif [ "$SESSION_SUCCESS" -gt 0 ] && [ "$CLEANUP_SUCCESS" -gt 0 ] && [ "$DB_CLOSED" -gt 0 ] && [ "$TOTAL_LISTINGS" -gt 0 ]; then
+              echo "## ✅ Status: SESSION SUCCESS" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Scraper completed successfully with $TOTAL_LISTINGS listings" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Session completed with cleanup and database closure" >> $GITHUB_STEP_SUMMARY
               echo "- 💰 Price Tracking: ACTIVE" >> $GITHUB_STEP_SUMMARY
             elif [ "$MODULAR_SUCCESS" -gt 0 ]; then
               echo "## ✅ Status: MODULAR SUCCESS" >> $GITHUB_STEP_SUMMARY
@@ -360,9 +380,9 @@ jobs:
               echo "- ❌ Full extraction failed" >> $GITHUB_STEP_SUMMARY
             fi
           elif [ "$STAGE_ATTEMPTED" = "1" ]; then
-            if [ "$STAGE1_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ]; then
+            if [ "$STAGE1_SUCCESS" -gt 0 ] || [ "$MODULAR_SUCCESS" -gt 0 ] || ([ "$SESSION_SUCCESS" -gt 0 ] && [ "$TOTAL_LISTINGS" -gt 0 ]); then
               echo "## ✅ Status: STAGE 1 SUCCESS" >> $GITHUB_STEP_SUMMARY
-              echo "- ✅ Stage 1 (Listings): COMPLETED" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ Stage 1 (Listings): COMPLETED with $TOTAL_LISTINGS listings" >> $GITHUB_STEP_SUMMARY
             else
               echo "## ❌ Status: STAGE 1 FAILED" >> $GITHUB_STEP_SUMMARY
               echo "- ❌ Stage 1 (Listings): FAILED" >> $GITHUB_STEP_SUMMARY
