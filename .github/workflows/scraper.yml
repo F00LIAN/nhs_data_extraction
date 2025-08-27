@@ -251,7 +251,7 @@ jobs:
           SESSION_SUCCESS=$(grep -c "🎯 Session status: SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
           CLEANUP_SUCCESS=$(grep -c "🧹 Cleanup complete" "$LOG_FILE" 2>/dev/null || echo "0")
           DB_CLOSED=$(grep -c "🔌 Database connection closed" "$LOG_FILE" 2>/dev/null || echo "0")
-          TOTAL_LISTINGS=$(grep "🔍 Total scraped listings:" "$LOG_FILE" 2>/dev/null | tail -1 | grep -o '[0-9]\+' || echo "0")
+          TOTAL_LISTINGS=$(grep "🔍 Total scraped listings:" "$LOG_FILE" 2>/dev/null | tail -1 | grep -o '[0-9]\+' | tr '\n' ' ' | awk '{print $NF}' || echo "0")
           
           # Determine status based on stage attempted and modular success indicators
           if [ "$STAGE_ATTEMPTED" = "full" ]; then
@@ -352,7 +352,7 @@ jobs:
           SESSION_SUCCESS=$(grep -c "🎯 Session status: SUCCESS" "$LOG_FILE" 2>/dev/null || echo "0")
           CLEANUP_SUCCESS=$(grep -c "🧹 Cleanup complete" "$LOG_FILE" 2>/dev/null || echo "0")
           DB_CLOSED=$(grep -c "🔌 Database connection closed" "$LOG_FILE" 2>/dev/null || echo "0")
-          TOTAL_LISTINGS=$(grep "🔍 Total scraped listings:" "$LOG_FILE" 2>/dev/null | tail -1 | grep -o '[0-9]\+' || echo "0")
+          TOTAL_LISTINGS=$(grep "🔍 Total scraped listings:" "$LOG_FILE" 2>/dev/null | tail -1 | grep -o '[0-9]\+' | tr '\n' ' ' | awk '{print $NF}' || echo "0")
           STAGE_ATTEMPTED="${{ steps.scraper.outputs.stage_completed }}"
           
           # Determine status based on stage attempted and modular success indicators
