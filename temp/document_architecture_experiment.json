@@ -1,0 +1,87 @@
+{
+    "_id": {
+      "$oid": "6892ac4e15b62baa476a75a5"
+    },
+    "property_id": "https://www.newhomesource.com/community/ca/camarillo/cortona-by-lennar/203014",
+    "community_information":{
+        "available_homes": 8,
+        "amenities": ["Basketball", "Park", "Pool"],
+        "description": "Cortona is a brand-new community of single-family homes, open for tours in beautiful Camarillo, CA. Designed for both comfort and connection, Cortona offers residents access to a private community pool and a spacious park filled with amenities including a playground, outdoor fitness equipment, sport courts, and more. Ideally located four miles from the Camarillo Outlets and minutes from a local shopping center, Cortona combines convenience with lifestyle. With quick access to the 101 freeway, residents are less than 30 minutes from coastal escapes like McGrath State Beach. Homes feature 3 to 4 bedrooms, 2 to 3 bathrooms, and spacious layouts in the 2,000-square-foot range.",
+        "school_districts": ["Oxnard Union High School District", "Pleasant Valley School District"],
+        "offerings": {
+            "floor_plans": [
+                {
+                    "status": "MOVE-IN READY",
+                    "price": "From $989,990",
+                    "bedrooms": 3,
+                    "bathrooms": 2,
+                    "garage": 2,
+                    "sqft": 2000,
+                    "address": "619 Guy Turner Drive (Cortana 4)",
+                    "floor_plan_url": "https://www.newhomesource.com/floorplans/cortona-by-lennar-floor-plans/203014/cortana-4",
+                    "image_url": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/LennarWeb/93190510-250423.jpg"  
+                },
+                {
+
+                }
+            ]
+        }
+
+    },
+    "scraped_at": {
+      "$date": "2025-08-05T18:12:32.639Z"
+    },
+    "source_url": "https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1",
+    "location_info": {
+      "state": "ca",
+      "area_region": "ventura-area",
+      "specific_location": "ventura-county",
+      "display_name": "Ventura County, CA"
+    },
+    "county": "Ventura County",
+    "property_data": {
+      "@context": "https://schema.org",
+      "@type": [
+        "Product",
+        "SingleFamilyResidence"
+      ],
+      "name": "Cortona subdivision by Lennar",
+      "image": {
+        "@type": "ImageObject",
+        "name": "Cortona community",
+        "description": "Image of the Cortona subdivision by Lennar",
+        "audience": "Homebuyers",
+        "contentLocation": "Cortona",
+        "copyrightHolder": "Lennar",
+        "creator": "Lennar",
+        "creditText": "Photo Credit: Lennar",
+        "isFamilyFriendly": true,
+        "contentUrl": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/LennarWeb/93190510-250423.jpg"
+      },
+      "url": "https://www.newhomesource.com/community/ca/camarillo/cortona-by-lennar/203014",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Camarillo",
+        "addressRegion": "CA",
+        "postalCode": "93010",
+        "streetAddress": "619 Guy Turner Drive"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "34.223200",
+        "longitude": "-119.087300"
+      },
+      "itemCondition": "NewCondition",
+      "offers": {
+        "@type": "Offer",
+        "isFamilyFriendly": true,
+        "areaServed": "Camarillo",
+        "availability": "LimitedAvailability",
+        "offeredBy": "Lennar",
+        "price": "989990",
+        "priceCurrency": "USD"
+      },
+      "telephone": "888-439-5097",
+      "accommodationCategory": "Single Family Residence"
+    }
+  }
