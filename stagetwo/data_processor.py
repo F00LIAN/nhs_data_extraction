@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 from typing import Dict, List, Set, Tuple
 from motor.motor_asyncio import AsyncIOMotorClient
+from ..validation.stage_two_structure_validation import validate_community_document_structure
 
 
 class DataProcessor:
@@ -85,6 +86,11 @@ class DataProcessor:
                     "last_updated": datetime.now()
                 }
                 
+                # Validate document structure before database insertion
+                if not validate_community_document_structure(community_doc):
+                    logging.warning(f"⚠️ Skipping invalid community document structure for listing: {listing_id}")
+                    return "error", {}
+                
                 await communitydata_collection.update_one(
                     {"listing_id": listing_id},
                     {"$set": community_doc},
@@ -114,6 +120,11 @@ class DataProcessor:
                         "total_changes": changes["total_changes"]
                     }
                 }
+                
+                # Validate document structure before database insertion
+                if not validate_community_document_structure(community_doc):
+                    logging.warning(f"⚠️ Skipping invalid community document structure for listing: {listing_id}")
+                    return "error", {}
                 
                 await communitydata_collection.update_one(
                     {"listing_id": listing_id},

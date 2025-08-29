@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Dict, List, Set, Optional
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
+from ..validation.stage_one_structure_validation import validate_document_structure
 
 load_dotenv()
 
@@ -74,6 +75,11 @@ class DatabaseManager:
         for document in extracted_data:
             listing_id = document.get("listing_id")
             if not listing_id:
+                continue
+            
+            # Validate document structure before processing
+            if not validate_document_structure(document):
+                logging.warning(f"⚠️ Skipping invalid document structure for listing: {listing_id}")
                 continue
                 
             scraped_listing_ids.add(listing_id)

@@ -314,6 +314,24 @@ jobs:
           echo "=== MODULAR EXECUTION STATISTICS ==="
           grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄|✅)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error|completed|stats)" | tail -n 12
           
+          # Extract validation statistics
+          echo ""
+          echo "=== DATA VALIDATION STATISTICS ==="
+          VALIDATION_SKIPS=$(grep -c "⚠️ Skipping invalid.*structure" "$LOG_FILE" 2>/dev/null || echo "0")
+          STAGE1_VALIDATION_SKIPS=$(grep -c "⚠️ Skipping invalid document structure for listing" "$LOG_FILE" 2>/dev/null || echo "0")
+          STAGE2_VALIDATION_SKIPS=$(grep -c "⚠️ Skipping invalid community document structure for listing" "$LOG_FILE" 2>/dev/null || echo "0")
+          
+          echo "🛡️ Total validation checks performed: Data quality validation active"
+          echo "⚠️ Stage 1 validation failures: $STAGE1_VALIDATION_SKIPS"
+          echo "⚠️ Stage 2 validation failures: $STAGE2_VALIDATION_SKIPS" 
+          echo "📊 Total validation skips: $VALIDATION_SKIPS"
+          
+          if [ "$VALIDATION_SKIPS" -eq 0 ]; then
+            echo "✅ Data quality: All scraped data passed validation"
+          else
+            echo "⚠️ Data quality: $VALIDATION_SKIPS items failed validation and were skipped"
+          fi
+          
         else
           echo "❌ No log file found - modular scraper may have failed to start"
           echo "scraper_status=no_log" >> $GITHUB_OUTPUT
@@ -406,6 +424,24 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           grep -E "(📊|🏠|⚠️|💾|🔍|🆕|🔄|✅)" "$LOG_FILE" | grep -E "(processed|new|updated|success|error|completed|stats)" | tail -n 10 >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          
+          # Add validation statistics to summary
+          VALIDATION_SKIPS=$(grep -c "⚠️ Skipping invalid.*structure" "$LOG_FILE" 2>/dev/null || echo "0")
+          STAGE1_VALIDATION_SKIPS=$(grep -c "⚠️ Skipping invalid document structure for listing" "$LOG_FILE" 2>/dev/null || echo "0")
+          STAGE2_VALIDATION_SKIPS=$(grep -c "⚠️ Skipping invalid community document structure for listing" "$LOG_FILE" 2>/dev/null || echo "0")
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🛡️ Data Validation Report" >> $GITHUB_STEP_SUMMARY
+          echo "- **Validation System**: ✅ Active" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stage 1 Validation Failures**: $STAGE1_VALIDATION_SKIPS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stage 2 Validation Failures**: $STAGE2_VALIDATION_SKIPS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Validation Skips**: $VALIDATION_SKIPS" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$VALIDATION_SKIPS" -eq 0 ]; then
+            echo "- **Data Quality Status**: ✅ All data passed validation" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Data Quality Status**: ⚠️ $VALIDATION_SKIPS items failed validation" >> $GITHUB_STEP_SUMMARY
+          fi
           
           # Show any errors
           if grep -q "❌" "$LOG_FILE"; then

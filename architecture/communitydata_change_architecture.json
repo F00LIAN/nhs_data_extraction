@@ -1,0 +1,103 @@
+{
+    "_id": {
+      "$oid": "68ad3f3f2ad53b6082a0f784"
+    },
+    "listing_id": "https://www.newhomesource.com/community/ca/ventura/fresco-at-del-sol-by-shea-homes/176723_Fresco_at_Del_Sol_subdivision_by_Shea_Homes",
+    "community_data": {
+      "communities": [
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 12",
+          "url": "https://www.newhomesource.com/plan/plan-12-shea-homes-ventura-ca/3063205",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1256850",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-12-shea-homes-ventura-ca/3063205_Plan_12",
+          "card_index": 0,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 11",
+          "url": "https://www.newhomesource.com/plan/plan-11-shea-homes-ventura-ca/3063193",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1229110",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-11-shea-homes-ventura-ca/3063193_Plan_11",
+          "card_index": 1,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 10",
+          "url": "https://www.newhomesource.com/plan/plan-10-shea-homes-ventura-ca/3063190",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1218110",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-10-shea-homes-ventura-ca/3063190_Plan_10",
+          "card_index": 2,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 9",
+          "url": "https://www.newhomesource.com/plan/plan-9-shea-homes-ventura-ca/3063192",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1161874",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-9-shea-homes-ventura-ca/3063192_Plan_9",
+          "card_index": 3,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 8",
+          "url": "https://www.newhomesource.com/plan/plan-8-shea-homes-ventura-ca/3063191",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1154785",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-8-shea-homes-ventura-ca/3063191_Plan_8",
+          "card_index": 4,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        }
+      ]
+    },
+    "last_updated": {
+      "$date": "2025-08-28T15:37:44.063Z"
+    },
+    "listing_status": "active",
+    "scraped_at": "2025-08-29T02:41:12.742895",
+    "total_communities_found": 5,
+    "change_summary": {
+      "new_communities": 2,
+      "updated_communities": 0,
+      "removed_communities": 0,
+      "total_changes": 2
+    },
+    "previous_scraped_at": "2025-08-27T02:40:48.316909"
+  }

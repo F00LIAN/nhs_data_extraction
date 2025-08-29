@@ -1,0 +1,169 @@
+{
+  "_id": {
+    "$oid": "68ad3f502ad53b6082a0f792"
+  },
+  "listing_id": "https://www.newhomesource.com/community/ca/santa-paula/autumnwood-at-harvest-at-limoneira-by-richmond-american-homes/200287_Autumnwood_at_Harvest_at_Limoneira_subdivision_by_Richmond_American_Homes",
+  "community_data": {
+    "communities": [
+      {
+        "build_status": [
+          "Hot Deal",
+          "Under Construction"
+        ],
+        "name": "Lenora",
+        "url": "https://www.newhomesource.com/specdetail/1865-coffeeberry-road-santa-paula-ca-93060/2987214",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/84609634-241010.jpg",
+        "build_type": "spec",
+        "price": "781693",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/specdetail/1865-coffeeberry-road-santa-paula-ca-93060/2987214_Lenora",
+        "card_index": 0,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Under Construction"
+        ],
+        "name": "Lenora",
+        "url": "https://www.newhomesource.com/specdetail/1847-jojoba-drive-santa-paula-ca-93060/2987215",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/84609634-241010.jpg",
+        "build_type": "spec",
+        "price": "778420",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/specdetail/1847-jojoba-drive-santa-paula-ca-93060/2987215_Lenora",
+        "card_index": 1,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Under Construction"
+        ],
+        "name": "Lennox",
+        "url": "https://www.newhomesource.com/specdetail/452-snowdrop-lane-santa-paula-ca-93060/2943230",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/84609631-241010.jpg",
+        "build_type": "spec",
+        "price": "748990",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/specdetail/452-snowdrop-lane-santa-paula-ca-93060/2943230_Lennox",
+        "card_index": 2,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Under Construction"
+        ],
+        "name": "Leigh",
+        "url": "https://www.newhomesource.com/specdetail/1850-flannel-drive-santa-paula-ca-93060/2911446",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/79888112-240529.jpg",
+        "build_type": "spec",
+        "price": "704607",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/specdetail/1850-flannel-drive-santa-paula-ca-93060/2911446_Leigh",
+        "card_index": 3,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Under Construction"
+        ],
+        "name": "Leigh",
+        "url": "https://www.newhomesource.com/specdetail/1882-coffeeberry-road-santa-paula-ca-93060/2987233",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/79888112-240529.jpg",
+        "build_type": "spec",
+        "price": "700349",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/specdetail/1882-coffeeberry-road-santa-paula-ca-93060/2987233_Leigh",
+        "card_index": 4,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Under Construction"
+        ],
+        "name": "Leigh",
+        "url": "https://www.newhomesource.com/specdetail/1877-coffeeberry-road-santa-paula-ca-93060/2987234",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/79888112-240529.jpg",
+        "build_type": "spec",
+        "price": "696852",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/specdetail/1877-coffeeberry-road-santa-paula-ca-93060/2987234_Leigh",
+        "card_index": 5,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Ready to build"
+        ],
+        "name": "Lenora",
+        "url": "https://www.newhomesource.com/plan/lenora-richmond-american-homes-santa-paula-ca/3095565",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/84609634-241010.jpg",
+        "build_type": "plan",
+        "price": "778420",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/plan/lenora-richmond-american-homes-santa-paula-ca/3095565_Lenora",
+        "card_index": 6,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Ready to build"
+        ],
+        "name": "Lennox",
+        "url": "https://www.newhomesource.com/plan/lennox-richmond-american-homes-santa-paula-ca/3095564",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/84609631-241010.jpg",
+        "build_type": "plan",
+        "price": "748990",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/plan/lennox-richmond-american-homes-santa-paula-ca/3095564_Lennox",
+        "card_index": 7,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      },
+      {
+        "build_status": [
+          "Hot Deal",
+          "Ready to build"
+        ],
+        "name": "Leigh",
+        "url": "https://www.newhomesource.com/plan/leigh-richmond-american-homes-santa-paula-ca/3032708",
+        "image": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Richmond/79888112-240529.jpg",
+        "build_type": "plan",
+        "price": "696852",
+        "price_currency": "USD",
+        "community_id": "https://www.newhomesource.com/plan/leigh-richmond-american-homes-santa-paula-ca/3032708_Leigh",
+        "card_index": 8,
+        "county": "Ventura County",
+        "address_locality": "Santa Paula",
+        "postal_code": "93060"
+      }
+    ]
+  },
+  "last_updated": {
+    "$date": "2025-08-25T22:00:00.596Z"
+  },
+  "listing_status": "active",
+  "scraped_at": "2025-08-29T02:41:29.092106",
+  "total_communities_found": 9
+}

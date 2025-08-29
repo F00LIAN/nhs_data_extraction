@@ -1,0 +1,24 @@
+{
+    "_id": {
+      "$oid": "68ad3ec298ee059db107ebfc"
+    },
+    "listing_id": "https://www.newhomesource.com/masterplan/ca/corona/bedford/186347_Bedford",
+    "scraped_at": {
+      "$date": "2025-08-29T02:39:40.358Z"
+    },
+    "source_url": "https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-5",
+    "property_data": {
+      "price": "$628,476 - $1,080,506",
+      "name": "Bedford",
+      "url": "https://www.newhomesource.com/masterplan/ca/corona/bedford/186347",
+      "address": {
+        "formatted_address": "Corona, CA 92883",
+        "county": "Riverside County"
+      }
+    },
+    "data_source": "html_fallback",
+    "listing_status": "active",
+    "first_scraped_at": {
+      "$date": "2025-08-25T21:57:38.363Z"
+    }
+  }
