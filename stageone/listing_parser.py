@@ -220,7 +220,8 @@ class ListingParser:
             "scraped_at": datetime.now(),
             "source_url": source_url,
             "property_data": data,
-            "data_source": "json_ld"
+            "data_source": "json_ld",
+            "listing_status": "pending"  # Will be updated during database processing
         }
 
     def _create_document_from_html(self, data: Dict, source_url: str, location_info: Dict = None) -> Optional[Dict]:
@@ -252,7 +253,8 @@ class ListingParser:
             "scraped_at": datetime.now(), 
             "source_url": source_url,
             "property_data": data,
-            "data_source": "html_fallback"
+            "data_source": "html_fallback",
+            "listing_status": "pending"  # Will be updated during database processing
         }
 
     def _generate_listing_id_from_json_ld(self, data: Dict) -> Optional[str]:

@@ -157,8 +157,8 @@ jobs:
           echo "🌐 Attempting extraction with browser: $browser"
           echo "========================================"
           
-          # Build command with enhanced logging
-          CMD="python run_nhs.py --stage $STAGE --max-concurrent $MAX_CONCURRENT --browser $browser --verbose"
+          # Build command without excessive MongoDB DEBUG logging
+          CMD="python run_nhs.py --stage $STAGE --max-concurrent $MAX_CONCURRENT --browser $browser"
           echo "💻 Command: $CMD"
           echo ""
           
