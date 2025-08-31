@@ -8,7 +8,14 @@ import os
 from datetime import datetime
 from typing import Dict, List, Set, Tuple
 from motor.motor_asyncio import AsyncIOMotorClient
-from ..validation.stage_two_structure_validation import validate_community_document_structure
+try:
+    from ..validation.stage_two_structure_validation import validate_community_document_structure
+except ImportError:
+    # Fallback for when run as script (GitHub Actions)
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from validation.stage_two_structure_validation import validate_community_document_structure
 
 
 class DataProcessor:
