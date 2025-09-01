@@ -139,24 +139,32 @@ def validate_community_item_structure(community: Dict[str, Any], index: int = No
         logging.warning(f"build_status should be a non-empty array in community item {index}")
         return False
     
-    # Validate URLs
+    # Validate URLs (allow "Coming Soon" for basiccommunity pages)
     url_fields = ["url", "image", "community_id"]
     for field in url_fields:
         value = community.get(field)
-        if not isinstance(value, str) or not value.startswith("http"):
-            logging.warning(f"Field '{field}' should be a valid URL in community item {index}")
+        if not isinstance(value, str):
+            logging.warning(f"Field '{field}' should be a string in community item {index}")
+            return False
+        # Allow "Coming Soon" values for basiccommunity pages
+        if value != "Coming Soon" and not value.startswith("http"):
+            logging.warning(f"Field '{field}' should be a valid URL or 'Coming Soon' in community item {index}")
             return False
     
-    # Validate build_type
+    # Validate build_type (allow "Coming Soon" for basiccommunity pages)
     build_type = community.get("build_type")
-    if build_type not in ["spec", "plan"]:
-        logging.warning(f"build_type should be 'spec' or 'plan' in community item {index}")
+    if build_type not in ["spec", "plan", "Coming Soon"]:
+        logging.warning(f"build_type should be 'spec', 'plan', or 'Coming Soon' in community item {index}")
         return False
     
-    # Validate price and currency
+    # Validate price and currency (allow "Coming Soon" for basiccommunity pages)
     price = community.get("price")
-    if not isinstance(price, str) or not price.isdigit():
-        logging.warning(f"price should be a numeric string in community item {index}")
+    if not isinstance(price, str):
+        logging.warning(f"price should be a string in community item {index}")
+        return False
+    # Allow "Coming Soon" or numeric values
+    if price != "Coming Soon" and not price.isdigit():
+        logging.warning(f"price should be numeric or 'Coming Soon' in community item {index}")
         return False
     
     price_currency = community.get("price_currency")
