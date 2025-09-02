@@ -88,11 +88,45 @@ class ListingParser:
             try:
                 data = json.loads(script.text)
                 if data.get("url") and data.get("name"):
+                    # Handle price fallback for JSON-LD data
+                    data = self._handle_json_ld_price_fallback(data, nhs_card)
                     return data
             except json.JSONDecodeError:
                 continue
         
         return None
+
+    def _handle_json_ld_price_fallback(self, data: Dict, nhs_card) -> Dict:
+        """
+        Input: JSON-LD data dict, BeautifulSoup card element
+        Output: JSON-LD data dict with updated price if needed
+        Description: Handle price fallback for JSON-LD when price is "0"
+        """
+        try:
+            # Check if offers.price is "0"
+            offers = data.get("offers", {})
+            current_price = offers.get("price", "")
+            
+            if current_price == "0":
+                # Look for price_label span element
+                price_span = nhs_card.find('span', {
+                    'data-card-element': 'Price',
+                    'data-qa': 'price_label'
+                })
+                
+                if price_span:
+                    fallback_price = price_span.text.strip()
+                    if fallback_price:
+                        # Update the price in offers
+                        if "offers" not in data:
+                            data["offers"] = {}
+                        data["offers"]["price"] = fallback_price
+                        logging.debug(f"Updated JSON-LD price from '0' to '{fallback_price}'")
+                    
+        except Exception as e:
+            logging.debug(f"Error in JSON-LD price fallback: {e}")
+            
+        return data
 
     def _extract_html_data(self, nhs_card) -> Optional[Dict]:
         """

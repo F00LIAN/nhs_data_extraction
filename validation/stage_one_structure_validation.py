@@ -8,6 +8,46 @@ from typing import Dict, Any, Optional
 import logging
 
 
+def _is_valid_edge_case_price(price: str) -> bool:
+    """
+    Check if price is valid including edge cases.
+    
+    Acceptable edge cases:
+    - "0"
+    - "Contact Builder for Details"
+    - "Coming Soon"
+    - "Pricing Not Available"
+    - "No Pricing Available"
+    - Regular pricing (numeric values, ranges, etc.)
+    """
+    if not isinstance(price, str):
+        return False
+    
+    price = price.strip()
+    if not price:
+        return False
+    
+    # Define acceptable edge case pricing values
+    edge_cases = {
+        "0",
+        "Contact Builder for Details",
+        "Coming Soon", 
+        "Pricing Not Available",
+        "No Pricing Available",
+        "Price not available"  # From existing HTML fallback logic
+    }
+    
+    # Check if it's an edge case
+    if price in edge_cases:
+        return True
+    
+    # Check if it's regular pricing (contains $ or digits)
+    if "$" in price or any(char.isdigit() for char in price):
+        return True
+    
+    return False
+
+
 def validate_json_ld_structure(json_ld_data: dict) -> bool:
     """
     Validate JSON-LD structured data format.
@@ -60,8 +100,9 @@ def validate_json_ld_structure(json_ld_data: dict) -> bool:
         logging.warning("Missing or invalid offers structure in JSON-LD")
         return False
     
-    if not offers.get("price"):
-        logging.warning("Missing price in offers for JSON-LD")
+    price = offers.get("price", "")
+    if not price or not _is_valid_edge_case_price(price):
+        logging.warning(f"Missing or invalid price in offers for JSON-LD: '{price}'")
         return False
     
     return True
@@ -82,11 +123,17 @@ def validate_html_fallback_structure(html_data: dict) -> bool:
         return False
     
     # Check required basic fields
-    required_fields = ["name", "url", "price"]
+    required_fields = ["name", "url"]
     for field in required_fields:
         if not html_data.get(field):
             logging.warning(f"Missing required field '{field}' in HTML fallback")
             return False
+    
+    # Validate price field with edge case handling
+    price = html_data.get("price", "")
+    if not price or not _is_valid_edge_case_price(price):
+        logging.warning(f"Missing or invalid price in HTML fallback: '{price}'")
+        return False
     
     # Validate address structure
     address = html_data.get("address")
