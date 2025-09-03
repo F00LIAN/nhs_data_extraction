@@ -92,6 +92,7 @@ class HTMLParser:
                 # Add new image selectors here as needed
             ],
             "price": [
+                lambda s: s.find("span", {"data-card-element": "Price", "data-qa": "price_label"}),  # Edge case price labels
                 lambda s: s.find("p", class_="home__price"),
                 lambda s: s.find("span", class_="price"),
                 lambda s: s.find("div", class_=lambda x: x and "price" in x),
@@ -149,6 +150,23 @@ class HTMLParser:
                     community_data["address_locality"] = address_locality
                     community_data["postal_code"] = postal_code
                     extracted_info["communities"].append(community_data)
+                else:
+                    # Create "Coming Soon" entry when community_id generation fails
+                    coming_soon_community = {
+                        "build_status": ["Coming Soon"],
+                        "name": "Coming Soon",
+                        "url": "Coming Soon", 
+                        "image": "Coming Soon",
+                        "build_type": "Coming Soon",
+                        "price": "Coming Soon",
+                        "price_currency": "USD",
+                        "community_id": "Coming Soon",
+                        "card_index": card_index,
+                        "county": county,
+                        "address_locality": address_locality,
+                        "postal_code": postal_code
+                    }
+                    extracted_info["communities"].append(coming_soon_community)
         
         extracted_info["total_communities_found"] = len(extracted_info["communities"])
         
@@ -166,7 +184,7 @@ class HTMLParser:
                 "build_type": "Coming Soon",
                 "price": "Coming Soon",
                 "price_currency": "USD",
-                "community_id": f"coming_soon_{homepage_id}",
+                "community_id": "Coming Soon",
                 "card_index": 0,
                 "county": county,
                 "address_locality": address_locality,
@@ -175,6 +193,54 @@ class HTMLParser:
             extracted_info["total_communities_found"] = 1
         
         return extracted_info
+    
+    def _is_valid_edge_case_price(self, price: str) -> bool:
+        """
+        Check if price text is a valid edge case that should be preserved.
+        
+        Input: price (str) - price text to validate
+        Output: bool - True if valid edge case pricing
+        Description: Validates edge case pricing to preserve meaningful text instead of defaulting to "Coming Soon"
+        """
+        if not isinstance(price, str):
+            return False
+        
+        price = price.strip()
+        if not price:
+            return False
+        
+        # Define acceptable edge case pricing values that should be preserved
+        edge_cases = {
+            "0",
+            "Contact Builder for Details", 
+            "Coming Soon",
+            "Pricing Not Available",
+            "No Pricing Available",
+            "Price not available",
+            "Call for Pricing",
+            "See Sales Representative"
+        }
+        
+        # Check if it's a preserved edge case
+        if price in edge_cases:
+            return True
+        
+        # Check if it contains meaningful pricing information ($ or digits)
+        if "$" in price or any(char.isdigit() for char in price):
+            return True
+        
+        return False
+    
+    def _has_valid_edge_case_data(self, community_data: dict) -> bool:
+        """
+        Check if community data has valid edge case pricing that should be preserved.
+        
+        Input: community_data (dict) - extracted community data
+        Output: bool - True if has valid edge case data
+        Description: Determines if community should be saved based on edge case pricing
+        """
+        price = community_data.get("price", "")
+        return self._is_valid_edge_case_price(price)
     
     def _find_housing_cards(self, soup: BeautifulSoup) -> List:
         """Find housing card elements with multiple selector strategies"""
@@ -232,16 +298,28 @@ class HTMLParser:
             if fallback_data:
                 community_data.update(fallback_data)
             
-            # Return "Coming Soon" if no data is found
+            # Return "Coming Soon" if no data is found and no valid edge case pricing
             if not fallback_data:
-                # Return "Coming Soon" if no data is found
-                community_data = {
-                    "name": "Coming Soon",
-                    "url": "Coming Soon",
-                    "image": "Coming Soon",
-                    "build_type": "Coming Soon",
-                    "price": "Coming Soon",
-                }
+                # Check if we extracted any valid edge case pricing from earlier selectors
+                extracted_price = community_data.get("price", "")
+                if self._is_valid_edge_case_price(extracted_price):
+                    # Preserve the edge case pricing, fill in missing fields with "Coming Soon"
+                    community_data.update({
+                        "name": community_data.get("name", "Coming Soon"),
+                        "url": community_data.get("url", "Coming Soon"),
+                        "image": community_data.get("image", "Coming Soon"),
+                        "build_type": community_data.get("build_type", "Coming Soon"),
+                        # price is already set with edge case value
+                    })
+                else:
+                    # No valid data found, use "Coming Soon" for everything
+                    community_data = {
+                        "name": "Coming Soon",
+                        "url": "Coming Soon",
+                        "image": "Coming Soon",
+                        "build_type": "Coming Soon",
+                        "price": "Coming Soon",
+                    }
         
         return community_data
     
