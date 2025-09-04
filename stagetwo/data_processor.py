@@ -287,11 +287,21 @@ class DataProcessor:
         Description: Triggers price tracking system to record current price data
         """
         try:
-            from scraper.shared.price_tracker import PriceTracker
+            logging.info("💰 Starting Stage 2 price snapshot capture...")
+            
+            # Import here to avoid circular imports
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from shared.price_tracker import PriceTracker
+            
             price_tracker = PriceTracker()
             await price_tracker.connect_to_mongodb()
             await price_tracker.capture_price_snapshots_from_stage2()
             price_tracker.close_connection()
-            logging.info("✅ Price snapshots captured successfully")
+            
+            logging.info("✅ Stage 2 price tracking completed successfully")
         except Exception as e:
             logging.error(f"❌ Error capturing price snapshots: {e}")
+            # Don't fail the entire Stage 2 process if price tracking fails
+            logging.warning("⚠️ Stage 2 will continue despite price tracking failure")
