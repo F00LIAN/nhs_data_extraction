@@ -22,7 +22,6 @@ class PriceTracker:
         self.db = None
         self.homepagedata_collection = None
         self.communitydata_collection = None
-        self.pricehistory_collection = None
         self.price_history_permanent_collection = None
         self.archivedlistings_collection = None
     
@@ -35,7 +34,6 @@ class PriceTracker:
             
             self.homepagedata_collection = self.db['homepagedata']
             self.communitydata_collection = self.db['communitydata']
-            self.pricehistory_collection = self.db['pricehistory']
             self.price_history_permanent_collection = self.db['price_history_permanent']
             self.archivedlistings_collection = self.db['archivedlistings']
             
@@ -51,10 +49,6 @@ class PriceTracker:
     async def _create_indexes(self):
         """Create necessary indexes for price collections"""
         try:
-            # Price history indexes
-            await self.pricehistory_collection.create_index([("listing_id", 1), ("snapshot_date", -1)])
-            await self.pricehistory_collection.create_index([("community_id", 1), ("snapshot_date", -1)])
-            await self.pricehistory_collection.create_index([("is_archived", 1)])
             
             # Permanent price history indexes
             await self.price_history_permanent_collection.create_index([("permanent_property_id", 1)])
@@ -108,12 +102,8 @@ class PriceTracker:
             # Log processing summary
             logging.info(f"🏠 Analyzed {total_communities_processed} individual communities from {len(today_docs)} properties")
             
-            # Bulk insert snapshots
+            # Update permanent storage for active properties
             if price_snapshots:
-                await self.pricehistory_collection.insert_many(price_snapshots)
-                logging.info(f"✅ Created {len(price_snapshots)} new price snapshots")
-                
-                # Also update permanent storage for active properties
                 await self._update_permanent_timelines(price_snapshots)
                 logging.info(f"💾 Updated {len(price_snapshots)} permanent timeline entries")
             else:
@@ -131,16 +121,19 @@ class PriceTracker:
             if not community_id or current_price <= 0:
                 return None
             
-            # Check for previous price
-            last_snapshot = await self.pricehistory_collection.find_one(
-                {"community_id": community_id},
-                sort=[("snapshot_date", -1)]
+            # Get previous price from permanent storage
+            permanent_id = self.generate_permanent_id(community_id)
+            permanent_record = await self.price_history_permanent_collection.find_one(
+                {"permanent_property_id": permanent_id}
             )
             
-            previous_price = last_snapshot.get("price", 0) if last_snapshot else 0
+            previous_price = 0
+            if permanent_record and permanent_record.get("price_timeline"):
+                last_timeline_entry = permanent_record["price_timeline"][-1]
+                previous_price = last_timeline_entry.get("price", 0)
             
             # Only create snapshot if price changed or first time
-            if current_price != previous_price or not last_snapshot:
+            if current_price != previous_price or not permanent_record:
                 change_amount = current_price - previous_price
                 change_percentage = (change_amount / previous_price * 100) if previous_price > 0 else 0
                 
@@ -161,7 +154,6 @@ class PriceTracker:
                         "is_significant": abs(change_percentage) >= 5.0
                     },
                     "data_source": "stage2_community",
-                    "is_archived": False
                 }
             
             return None
@@ -197,15 +189,19 @@ class PriceTracker:
                     }
                 }
                 
+                # Build community snapshot
+                community_snapshot = self._build_community_snapshot(target_community, listing_id)
+                
+                # Calculate aggregated metrics
+                aggregated_metrics = await self._calculate_aggregated_metrics(permanent_id, snapshot["price"])
+                
                 # Upsert permanent record
                 await self.price_history_permanent_collection.update_one(
                     {"permanent_property_id": permanent_id},
                     {
                         "$set": {
-                            "original_listing_id": listing_id,
-                            "community_id": community_id,
-                            "community_name": snapshot["property_name"],
-                            "property_snapshot": self._build_property_snapshot(property_doc),
+                            **community_snapshot,
+                            "aggregated_metrics": aggregated_metrics,
                             "last_updated": datetime.now()
                         },
                         "$push": {"price_timeline": timeline_entry},
@@ -230,27 +226,24 @@ class PriceTracker:
         else:
             return "decrease"
     
-    def _build_property_snapshot(self, property_doc: Dict) -> Dict:
-        """Build frozen property metadata for permanent storage"""
-        property_data = property_doc.get("property_data", {})
-        address = property_data.get("address", {})
-        geo = property_data.get("geo", {})
+    def _build_community_snapshot(self, community: Dict, listing_id: str) -> Dict:
+        """Build community metadata for permanent storage"""
+        address = community.get("address", {})
         
         return {
-            "name": property_data.get("name", ""),
-            "developer": property_data.get("offers", {}).get("offeredBy", ""),
-            "location": {
-                "county": self._extract_county_from_address(address),
-                "city": address.get("addressLocality", ""),
-                "coordinates": {
-                    "latitude": geo.get("latitude"),
-                    "longitude": geo.get("longitude")
-                },
-                "address": f"{address.get('streetAddress', '')}, {address.get('addressLocality', '')}, {address.get('addressRegion', '')}"
-            },
-            "first_seen": property_doc.get("first_scraped_at", property_doc.get("scraped_at")),
-            "last_seen": property_doc.get("scraped_at"),
-            "status": "active"
+            "permanent_property_id": self.generate_permanent_id(community.get("community_id", "")),
+            "community_id": community.get("community_id", ""),
+            "accommodationCategory": community.get("accommodationCategory", ""),
+            "offeredBy": community.get("offeredBy", ""),
+            "community_name": community.get("name", ""),
+            "listing_status": "active",
+            "address": {
+                "county": address.get("county", ""),
+                "addressLocality": address.get("addressLocality", ""),
+                "addressRegion": address.get("addressRegion", ""),
+                "streetAddress": address.get("streetAddress", ""),
+                "postalCode": address.get("postalCode", "")
+            }
         }
     
     def _extract_county_from_address(self, address: Dict) -> str:
@@ -271,13 +264,13 @@ class PriceTracker:
         try:
             logging.info(f"🔄 Consolidating price history for {listing_id}")
             
-            # Get all price history for this property (includes all communities)
-            price_records = await self.pricehistory_collection.find(
-                {"listing_id": listing_id}
-            ).sort("snapshot_date", 1).to_list(length=None)
+            # Get permanent price history for this property
+            permanent_records = await self.price_history_permanent_collection.find(
+                {"original_listing_id": listing_id}
+            ).to_list(length=None)
             
-            if not price_records:
-                logging.warning(f"⚠️ No price history found for {listing_id}")
+            if not permanent_records:
+                logging.warning(f"⚠️ No permanent price history found for {listing_id}")
                 return
             
             # Get archived property metadata
@@ -289,79 +282,21 @@ class PriceTracker:
                 logging.error(f"❌ No archived property found for {listing_id}")
                 return
             
-            # Group price records by community_id
-            communities_data = {}
-            for record in price_records:
-                community_id = record.get("community_id")
-                if community_id:
-                    if community_id not in communities_data:
-                        communities_data[community_id] = []
-                    communities_data[community_id].append(record)
-            
-            # Process each community separately
-            consolidated_count = 0
-            for community_id, community_records in communities_data.items():
-                permanent_id = self.generate_permanent_id(community_id)
-                
-                # Build complete timeline for this community
-                price_timeline = []
-                for record in community_records:
-                    price_timeline.append({
-                        "date": record["snapshot_date"],
-                        "price": record["price"],
-                        "currency": record.get("price_currency", "USD"),
-                        "source": record.get("data_source", "unknown"),
-                        "change_type": self._classify_change_type(record.get("change_metrics", {})),
-                        "context": {
-                            "build_status": record.get("build_status", []),
-                            "build_type": record.get("build_type", ""),
-                            "change_percentage": record.get("change_metrics", {}).get("change_percentage", 0)
-                        }
-                    })
-                
-                # Calculate aggregated metrics for this community
-                prices = [entry["price"] for entry in price_timeline]
-                metrics = {
-                    "min_price": min(prices),
-                    "max_price": max(prices),
-                    "avg_price": sum(prices) / len(prices),
-                    "total_days_tracked": (price_timeline[-1]["date"] - price_timeline[0]["date"]).days if len(price_timeline) > 1 else 0,
-                    "total_price_changes": len(price_timeline),
-                    "volatility_score": self._calculate_volatility(prices)
-                }
-                
-                # Update permanent storage with complete data for this community
+            # Update permanent storage to mark as archived
+            for record in permanent_records:
                 await self.price_history_permanent_collection.update_one(
-                    {"permanent_property_id": permanent_id},
+                    {"permanent_property_id": record["permanent_property_id"]},
                     {"$set": {
-                        "original_listing_id": listing_id,
-                        "community_id": community_id,
-                        "community_name": community_records[0].get("property_name", ""),
-                        "property_snapshot": {
-                            **self._build_property_snapshot(archived_property),
-                            "status": "archived"
-                        },
-                        "price_timeline": price_timeline,
-                        "aggregated_metrics": metrics,
+                        "property_snapshot.status": "archived",
                         "archive_metadata": {
                             "archived_at": datetime.now(),
-                            "archive_reason": archived_property.get("archive_reason", "unknown"),
-                            "final_price": price_timeline[-1]["price"] if price_timeline else None,
-                            "total_price_changes": len(price_timeline)
+                            "archive_reason": archived_property.get("archive_reason", "unknown")
                         },
                         "last_updated": datetime.now()
-                    }},
-                    upsert=True
+                    }}
                 )
-                consolidated_count += 1
             
-            # Mark price history as archived
-            await self.pricehistory_collection.update_many(
-                {"listing_id": listing_id},
-                {"$set": {"is_archived": True, "archived_at": datetime.now()}}
-            )
-            
-            logging.info(f"✅ Consolidated {consolidated_count} communities with {len(price_records)} total price records for {listing_id}")
+            logging.info(f"✅ Marked {len(permanent_records)} permanent records as archived for {listing_id}")
             
         except Exception as e:
             logging.error(f"❌ Error consolidating price history for {listing_id}: {e}")
@@ -385,7 +320,7 @@ class PriceTracker:
             result = await self.communitydata_collection.update_one(
                 {"listing_id": listing_id},
                 {"$set": {
-                    "is_archived": True,
+                    "listing_status": "archived",
                     "archived_at": datetime.now(),
                     "archive_reason": "parent_listing_archived"
                 }}
@@ -404,12 +339,12 @@ class PriceTracker:
         try:
             cutoff_date = datetime.now() - timedelta(days=days_to_keep)
             
-            result = await self.pricehistory_collection.delete_many({
-                "snapshot_date": {"$lt": cutoff_date},
-                "is_archived": True
+            # Clean up old archived permanent records (optional - could keep for historical analysis)
+            result = await self.price_history_permanent_collection.delete_many({
+                "archive_metadata.archived_at": {"$lt": cutoff_date}
             })
             
-            logging.info(f"🧹 Cleaned up {result.deleted_count} old price history records")
+            logging.info(f"🧹 Cleaned up {result.deleted_count} old archived permanent records")
             
         except Exception as e:
             logging.error(f"❌ Error cleaning up price history: {e}")

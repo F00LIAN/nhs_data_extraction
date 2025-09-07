@@ -1,0 +1,61 @@
+{
+    "_id": {
+      "$oid": "68ad3d5a98ee059db107eb48"
+    },
+    "listing_id": "https://www.newhomesource.com/community/ca/ventura/novato-at-del-sol-by-shea-homes/176724_Novato_at_Del_Sol_subdivision_by_Shea_Homes",
+    "scraped_at": {
+      "$date": "2025-09-06T02:33:38.007Z"
+    },
+    "source_url": "https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1",
+    "property_data": {
+      "@context": "https://schema.org",
+      "@type": [
+        "Product",
+        "SingleFamilyResidence"
+      ],
+      "name": "Novato at Del Sol subdivision by Shea Homes",
+      "image": {
+        "@type": "ImageObject",
+        "name": "Novato at Del Sol community",
+        "description": "Image of the Novato at Del Sol subdivision by Shea Homes",
+        "audience": "Homebuyers",
+        "contentLocation": "Novato at Del Sol",
+        "copyrightHolder": "Shea Homes",
+        "creator": "Shea Homes",
+        "creditText": "Photo Credit: Shea Homes",
+        "isFamilyFriendly": true,
+        "contentUrl": "https://nhs-dynamic-secure.akamaized.net/Images/Homes/Shea/83245270-240906.webp"
+      },
+      "url": "https://www.newhomesource.com/community/ca/ventura/novato-at-del-sol-by-shea-homes/176724",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Ventura",
+        "addressRegion": "CA",
+        "postalCode": "93004",
+        "streetAddress": "183 S. Nevada Ave",
+        "county": "Ventura County"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "34.291715",
+        "longitude": "-119.159572"
+      },
+      "itemCondition": "NewCondition",
+      "offers": {
+        "@type": "Offer",
+        "isFamilyFriendly": true,
+        "areaServed": "Ventura",
+        "availability": "LimitedAvailability",
+        "offeredBy": "Shea Homes",
+        "price": "927588",
+        "priceCurrency": "USD"
+      },
+      "telephone": "888-328-7746",
+      "accommodationCategory": "Single Family Residence"
+    },
+    "data_source": "json_ld",
+    "listing_status": "active",
+    "first_scraped_at": {
+      "$date": "2025-08-25T21:51:38.928Z"
+    }
+  }

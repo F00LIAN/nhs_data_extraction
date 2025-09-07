@@ -1,0 +1,26 @@
+2025-09-06 18:28:19,205 - INFO - 📋 Masterplan migration started - Log: C:\NHP\src\scraper\temp\logs\masterplan_migration_log_20250906_182819.log
+2025-09-06 18:28:19,205 - INFO - 🚀 Starting masterplan migration from communitydata to masterplandata
+2025-09-06 18:28:20,333 - INFO - ✅ Connected to MongoDB successfully
+2025-09-06 18:28:20,333 - INFO - 🔍 Scanning communitydata collection for masterplan listings...
+2025-09-06 18:28:20,839 - INFO - 🏗️ Found masterplan: https://www.newhomesource.com/masterplan/ca/santa-paula/harvest-at-limoneira/152225_Harvest_at_Limoneira
+2025-09-06 18:28:20,844 - INFO - 🏗️ Found masterplan: https://www.newhomesource.com/masterplan/ca/ventura/del-sol/206977_Del_Sol
+2025-09-06 18:28:21,841 - INFO - 📊 Scan complete: 2 masterplans found in 215 total documents
+2025-09-06 18:28:21,841 - INFO - 🔄 Migrating masterplan: https://www.newhomesource.com/masterplan/ca/santa-paula/harvest-at-limoneira/152225_Harvest_at_Limoneira
+2025-09-06 18:28:22,003 - INFO - ✅ Masterplan inserted/updated in masterplandata: https://www.newhomesource.com/masterplan/ca/santa-paula/harvest-at-limoneira/152225_Harvest_at_Limoneira
+2025-09-06 18:28:22,084 - INFO - 🗑️ Removed masterplan from communitydata: https://www.newhomesource.com/masterplan/ca/santa-paula/harvest-at-limoneira/152225_Harvest_at_Limoneira
+2025-09-06 18:28:22,084 - INFO - 🔄 Migrating masterplan: https://www.newhomesource.com/masterplan/ca/ventura/del-sol/206977_Del_Sol
+2025-09-06 18:28:22,244 - INFO - ✅ Masterplan inserted/updated in masterplandata: https://www.newhomesource.com/masterplan/ca/ventura/del-sol/206977_Del_Sol
+2025-09-06 18:28:22,325 - INFO - 🗑️ Removed masterplan from communitydata: https://www.newhomesource.com/masterplan/ca/ventura/del-sol/206977_Del_Sol
+2025-09-06 18:28:22,325 - INFO - 📊 MASTERPLAN MIGRATION SUMMARY
+2025-09-06 18:28:22,325 - INFO - ==================================================
+2025-09-06 18:28:22,325 - INFO - ⏱️ Duration: 0:00:03.125261
+2025-09-06 18:28:22,325 - INFO - 📋 Total documents checked: 215
+2025-09-06 18:28:22,326 - INFO - 🏗️ Masterplans found: 2
+2025-09-06 18:28:22,326 - INFO - ✅ Successfully migrated: 2
+2025-09-06 18:28:22,326 - INFO - 🗑️ Removed from communitydata: 2
+2025-09-06 18:28:22,326 - INFO - ❌ Errors encountered: 0
+2025-09-06 18:28:22,326 - INFO - ✅ Successfully migrated listings:
+2025-09-06 18:28:22,326 - INFO -    - https://www.newhomesource.com/masterplan/ca/santa-paula/harvest-at-limoneira/152225_Harvest_at_Limoneira
+2025-09-06 18:28:22,326 - INFO -    - https://www.newhomesource.com/masterplan/ca/ventura/del-sol/206977_Del_Sol
+2025-09-06 18:28:22,327 - INFO - 🎉 All masterplan migrations completed successfully!
+2025-09-06 18:28:22,409 - INFO - 🔌 MongoDB connection closed

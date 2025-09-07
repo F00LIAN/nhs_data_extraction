@@ -134,22 +134,23 @@ class NewHomeSourceExtractor:
         print("="*60)
         
         try:
-            # Get property data from Stage 1 results
-            print("🔗 Fetching property data from Stage 1...")
-            property_data = self.data_fetcher.get_property_data()
+            # Process Stage 1 to Stage 2 routing (masterplan detection)
+            print("🔗 Processing Stage 1 results and routing masterplan communities...")
+            from shared.stage_one_and_two_check import process_stage_one_to_two_routing
+            property_data = await process_stage_one_to_two_routing()
             
             if not property_data:
-                print("❌ No property data found from Stage 1")
+                print("❌ No regular property data found for Stage 2")
                 print("💡 Make sure Stage 1 has run successfully first")
                 return 1
             
-            print(f"✅ Found {len(property_data)} properties to process")
+            print(f"✅ Found {len(property_data)} regular properties for Stage 2 processing")
             
             print("\n🏃‍♂️ Starting Stage 2 Community Extraction...")
             print("="*60)
             
-            # Execute Stage 2 extraction
-            result = await self.stage2_orchestrator.execute_stage2_extraction()
+            # Execute Stage 2 extraction with filtered property data
+            result = await self.stage2_orchestrator.execute_stage2_extraction(property_data)
             
             print("\n" + "="*60)
             print("🏁 Stage 2 Extraction Complete!")

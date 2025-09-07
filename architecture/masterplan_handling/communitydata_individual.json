@@ -1,0 +1,112 @@
+{
+    "_id": {
+      "$oid": "68ad3f572ad53b6082a0f797"
+    },
+    "listing_id": "https://www.newhomesource.com/community/ca/ventura/novato-at-del-sol-by-shea-homes/176724_Novato_at_Del_Sol_subdivision_by_Shea_Homes",
+    "community_data": {
+      "communities": [
+        {
+          "build_status": [
+            "Move-In Ready"
+          ],
+          "name": "Plan 4",
+          "url": "https://www.newhomesource.com/specdetail/336-s-nevada-av-san-buenaventura-ca-93004/3000849",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "spec",
+          "price": "1012473",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/specdetail/336-s-nevada-av-san-buenaventura-ca-93004/3000849_Plan_4",
+          "card_index": 0,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 6",
+          "url": "https://www.newhomesource.com/plan/plan-6-shea-homes-ventura-ca/3063179",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1121363",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-6-shea-homes-ventura-ca/3063179_Plan_6",
+          "card_index": 1,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 5",
+          "url": "https://www.newhomesource.com/plan/plan-5-shea-homes-ventura-ca/3063178",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1119271",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-5-shea-homes-ventura-ca/3063178_Plan_5",
+          "card_index": 2,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 4",
+          "url": "https://www.newhomesource.com/plan/plan-4-shea-homes-ventura-ca/3063183",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "1012473",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-4-shea-homes-ventura-ca/3063183_Plan_4",
+          "card_index": 3,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 3",
+          "url": "https://www.newhomesource.com/plan/plan-3-shea-homes-ventura-ca/3063176",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "978410",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-3-shea-homes-ventura-ca/3063176_Plan_3",
+          "card_index": 4,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        },
+        {
+          "build_status": [
+            "Ready to build"
+          ],
+          "name": "Plan 1",
+          "url": "https://www.newhomesource.com/plan/plan-1-shea-homes-ventura-ca/3063182",
+          "image": "https://beta-nhs-static-secure.akamaized.net/GlobalResources14/Default/images/no_photo/no_photos_325x216.png",
+          "build_type": "plan",
+          "price": "927588",
+          "price_currency": "USD",
+          "community_id": "https://www.newhomesource.com/plan/plan-1-shea-homes-ventura-ca/3063182_Plan_1",
+          "card_index": 5,
+          "county": "Ventura County",
+          "address_locality": "Ventura",
+          "postal_code": "93004"
+        }
+      ]
+    },
+    "last_updated": {
+      "$date": "2025-08-25T22:00:08.236Z"
+    },
+    "listing_status": "active",
+    "scraped_at": "2025-09-06T02:36:16.269079",
+    "total_communities_found": 6
+  }

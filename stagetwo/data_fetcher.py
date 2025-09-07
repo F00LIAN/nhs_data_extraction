@@ -37,7 +37,9 @@ class DataFetcher:
                 "property_data.url": 1,
                 "property_data.address.county": 1,
                 "property_data.address.addressLocality": 1,
-                "property_data.address.postalCode": 1
+                "property_data.address.postalCode": 1,
+                "property_data.offers.offeredBy": 1,
+                "property_data.accommodationCategory": 1
             })
             
             for doc in cursor:
@@ -47,7 +49,9 @@ class DataFetcher:
                         "listing_id": doc.get("listing_id"),
                         "county": doc.get("property_data", {}).get("address", {}).get("county"),
                         "addressLocality": doc.get("property_data", {}).get("address", {}).get("addressLocality"),
-                        "postalCode": doc.get("property_data", {}).get("address", {}).get("postalCode")
+                        "postalCode": doc.get("property_data", {}).get("address", {}).get("postalCode"),
+                        "offeredBy": doc.get("property_data", {}).get("offers", {}).get("offeredBy"),
+                        "accommodationCategory": doc.get("property_data", {}).get("accommodationCategory")
                     }
             
             client.close()

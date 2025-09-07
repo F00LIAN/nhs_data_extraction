@@ -118,11 +118,11 @@ class HTMLParser:
             "url_name_combination",  # current approach
         ]
     
-    def extract_community_data(self, html: str, homepage_id: str, address_locality: str, county: str, postal_code: str) -> Dict:
+    def extract_community_data(self, html: str, homepage_id: str, address_locality: str, county: str, postal_code: str, offered_by: str = None, accommodation_category: str = None) -> Dict:
         """
         Extract community data from HTML content.
         
-         Input: html (str), homepage_id (str), address_locality (str), county (str), postal_code (str)
+         Input: html (str), homepage_id (str), address_locality (str), county (str), postal_code (str), offered_by (str), accommodation_category (str)
         Output: Dict with format {"homepage_id": str, "county": str, "address_locality": str, "postal_code": str, "communities": List[Dict], "total_communities_found": int}
         Description: Parses housing cards from HTML and extracts JSON-LD data for each community
         """
@@ -132,6 +132,9 @@ class HTMLParser:
                           "postal_code": postal_code,
                           "communities": []}
         soup = BeautifulSoup(html, 'html.parser')
+        
+        # Store county for JSON-LD parsing
+        self._current_county = county
         
         # Find housing card containers with multiple selector fallbacks
         housing_cards = self._find_housing_cards(soup)
@@ -146,9 +149,9 @@ class HTMLParser:
                 if community_id:
                     community_data["community_id"] = community_id
                     community_data["card_index"] = card_index
-                    community_data["county"] = county
-                    community_data["address_locality"] = address_locality
-                    community_data["postal_code"] = postal_code
+                    # These fields are now mandatory - use fallback if not available
+                    community_data["offeredBy"] = offered_by if offered_by else "Unknown"
+                    community_data["accommodationCategory"] = accommodation_category if accommodation_category else "Unknown"
                     extracted_info["communities"].append(community_data)
                 else:
                     # Create "Coming Soon" entry when community_id generation fails
@@ -157,14 +160,20 @@ class HTMLParser:
                         "name": "Coming Soon",
                         "url": "Coming Soon", 
                         "image": "Coming Soon",
+                        "address": {
+                            "@type": "PostalAddress",
+                            "county": county,
+                            "addressLocality": address_locality,
+                            "postalCode": postal_code
+                        },
                         "build_type": "Coming Soon",
                         "price": "Coming Soon",
                         "price_currency": "USD",
                         "community_id": "Coming Soon",
                         "card_index": card_index,
-                        "county": county,
-                        "address_locality": address_locality,
-                        "postal_code": postal_code
+                        # These fields are now mandatory - use fallback if not available
+                        "offeredBy": offered_by if offered_by else "Unknown",
+                        "accommodationCategory": accommodation_category if accommodation_category else "Unknown"
                     }
                     extracted_info["communities"].append(coming_soon_community)
         
@@ -181,14 +190,19 @@ class HTMLParser:
                 "name": "Coming Soon",
                 "url": "Coming Soon",
                 "image": "Coming Soon",
+                "address": {
+                    "@type": "PostalAddress",
+                    "county": county,
+                    "addressLocality": address_locality,
+                    "postalCode": postal_code
+                },
                 "build_type": "Coming Soon",
                 "price": "Coming Soon",
                 "price_currency": "USD",
                 "community_id": "Coming Soon",
                 "card_index": 0,
-                "county": county,
-                "address_locality": address_locality,
-                "postal_code": postal_code
+                "offeredBy": offered_by if offered_by else "Unknown",
+                "accommodationCategory": accommodation_category if accommodation_category else "Unknown"
             })
             extracted_info["total_communities_found"] = 1
         
@@ -345,10 +359,18 @@ class HTMLParser:
                     data = json.loads(script.string.strip())
                     
                     if data.get("@type") == "SingleFamilyResidence":
+                        # Get address and add county if available
+                        address = data.get("address", {})
+                        if isinstance(address, dict) and address:
+                            # Add county to address if not present
+                            if "county" not in address and hasattr(self, '_current_county'):
+                                address["county"] = self._current_county
+                        
                         community_data.update({
                             "name": data.get("name"),
                             "url": data.get("url"),
                             "image": data.get("image"),
+                            "address": address,
                             "build_type": self._determine_build_type(data.get("url", ""))
                         })
                     elif data.get("@type") == "Product":

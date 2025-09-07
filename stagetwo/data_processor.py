@@ -266,10 +266,9 @@ class DataProcessor:
                 await communitydata_collection.update_one(
                     {"listing_id": listing_id},
                     {"$set": {
-                        "is_archived": True,
+                        "listing_status": "archived",
                         "archived_at": datetime.now(),
-                        "archive_reason": "missing from current Stage 2 scrape",
-                        "listing_status": "archived"
+                        "archive_reason": "missing from current Stage 2 scrape"
                     }}
                 )
             

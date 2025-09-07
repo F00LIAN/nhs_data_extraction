@@ -12,13 +12,14 @@ This scraper system is designed to create and maintain a comprehensive database 
 
 ## 🗄️ Database Architecture
 
-The system builds a MongoDB database with five main collections:
+The system builds a MongoDB database with six main collections:
 
 | Collection | Purpose | Data Source |
 |------------|---------|-------------|
 | `homepagedata` | Basic property listings and metadata | Stage 1 |
 | `communitydata` | Detailed community and neighborhood info | Stage 2 |
-| `pricehistory` | Daily price snapshots | Price Tracker |
+| `masterplandata` | Masterplan community data (separate processing) | Stage 1→2 Router |
+| `basiccommunitydata` | Basic community data (separate processing) | Stage 1→2 Router |
 | `price_history_permanent` | Long-term price trend analysis | Price Tracker |
 | `archivedlistings` | Historical record of removed properties | Stage 1 |
 
@@ -45,7 +46,8 @@ src/scraper/
 │
 ├── shared/                 ← SHARED: Common Utilities
 │   ├── price_tracker.py             ← Tracks price changes
-│   └── price_history.py             ← Analyzes price trends
+│   ├── price_history.py             ← Analyzes price trends
+│   └── stage_one_and_two_check.py   ← Masterplan detection and routing
 │
 ├── validation/             ← DATA VALIDATION
 │   ├── stage_one_structure_validation.py
@@ -174,41 +176,116 @@ python run_nhs.py --max-concurrent 15 --browser chrome
 
 ### Output Collections
 - **`communitydata`**: Detailed community information
-- **`pricehistory`**: Price snapshots from extraction
+- **`price_history_permanent`**: Price timeline storage
+
+## 🏗️ Special Community Detection & Routing
+
+**Goal**: Separate special community types (masterplan, basiccommunity) from regular communities for specialized processing
+
+### Special Community Detection Process
+
+Between Stage 1 and Stage 2, the system automatically detects and routes special community types:
+
+#### `stage_one_and_two_check.py` - Intelligent Routing
+- **Purpose**: Analyzes Stage 1 results and separates special vs regular communities
+- **Detection Logic**: 
+  - Checks if `listing_id` contains "masterplan" 
+  - Checks if `listing_id` contains "basiccommunity"
+- **Routing Decision**: 
+  - **Masterplan** → `masterplandata` collection (skip Stage 2)
+  - **Basic Community** → `basiccommunitydata` collection (skip Stage 2)
+  - **Regular** → Continue to Stage 2 processing
+
+#### Duplicate Prevention & Update Logic
+
+**All collections implement proper upsert patterns to prevent duplicates:**
+
+**Masterplan & Basic Community Collections:**
+```python
+# Check if document exists
+existing_doc = await collection.find_one({"unique_id": listing_id})
+
+if existing_doc:
+    # Update existing document
+    new_doc["previous_scraped_at"] = existing_doc.get("scraped_at")
+    await collection.replace_one({"unique_id": listing_id}, new_doc)
+else:
+    # Insert new document
+    await collection.insert_one(new_doc)
+```
+
+**Community Data Collection:**
+```python
+# Upsert with change detection
+await communitydata_collection.update_one(
+    {"listing_id": listing_id},
+    {"$set": community_doc},
+    upsert=True
+)
+```
+
+**Key Benefits:**
+- **No Duplicates**: Each listing_id appears only once per collection
+- **Update Tracking**: `previous_scraped_at` field tracks last update
+- **Change Detection**: Only meaningful changes trigger updates
+- **Atomic Operations**: Database consistency maintained
+
+#### Data Transformation for Masterplans
+```json
+{
+  "masterplanlisting_id": "https://www.newhomesource.com/masterplan/...",  // Renamed from listing_id
+  "masterplan_data": {                                                     // Renamed from property_data
+    "price_range": "$699,852 - $854,989",                                 // Renamed from price
+    "name": "Harvest at Limoneira",
+    "url": "https://www.newhomesource.com/masterplan/...",
+    "address": {
+      "formatted_address": "Santa Paula, CA 93060",
+      "county": "Ventura County"
+    }
+  },
+  "data_source": "html_fallback",
+  "listing_status": "active"
+}
+```
+
+#### Data Transformation for Basic Communities
+```json
+{
+  "basic_community_listing_id": "https://www.newhomesource.com/basiccommunity/...",  // Renamed from listing_id
+  "basic_community_data": {                                                       // Renamed from property_data
+    "name": "Basic Community Name",
+    "url": "https://www.newhomesource.com/basiccommunity/...",
+    "address": {
+      "addressLocality": "City Name",
+      "county": "County Name"
+    }
+  },
+  "data_source": "json_ld",
+  "listing_status": "active"
+}
+```
+
+#### Benefits of Special Community Separation
+- **Specialized Processing**: Special communities don't need community detail extraction
+- **Data Structure Optimization**: Different schemas optimized for each community type
+- **Performance**: Reduces Stage 2 workload by filtering out special communities
+- **Clear Separation**: Distinct data types for better analytics
+
+### Integration with Main Workflow
+
+The routing happens automatically during full extraction:
+1. **Stage 1** completes → All properties in `homepagedata`
+2. **Router** analyzes → Special communities to respective collections, regulars continue
+3. **Stage 2** processes → Only regular communities (excludes special types)
+4. **Price Tracking** → Monitors only regular communities (special types isolated)
 
 ## 💰 Shared - Price Tracking System
 
-**Goal**: Monitor and analyze price changes over time through a dual-collection approach
+**Goal**: Monitor and analyze price changes over time through permanent storage
 
 ### Price Tracking Architecture
 
-The system uses **two distinct collections** to manage price data efficiently:
-
-#### 📊 `pricehistory` Collection - Active Snapshots
-**Purpose**: Real-time price change tracking for active properties
-- **Data Type**: Individual price snapshots with change detection
-- **Lifecycle**: Active while property is listed → Archived when property removed
-- **Storage Pattern**: One document per price change event
-- **Retention**: Cleaned up after 365 days (configurable)
-
-**Document Structure**:
-```json
-{
-  "listing_id": "property-url",
-  "community_id": "community-identifier", 
-  "property_name": "Sunset Villa",
-  "price": 325000,
-  "snapshot_date": "2024-01-15T10:30:00Z",
-  "change_metrics": {
-    "previous_price": 320000,
-    "change_amount": 5000,
-    "change_percentage": 1.56,
-    "is_significant": false
-  },
-  "build_status": ["Now Selling", "Move-In Ready"],
-  "is_archived": false
-}
-```
+The system uses a **single collection** for price data management:
 
 #### 🏛️ `price_history_permanent` Collection - Long-term Analytics
 **Purpose**: Permanent storage of complete property price histories **with running price ledger**
@@ -222,17 +299,17 @@ The system uses **two distinct collections** to manage price data efficiently:
 ```json
 {
   "permanent_property_id": "md5-hash-of-community-id",
-  "original_listing_id": "property-url", // How we store this already in homepagedata collection and communitydata collection
   "community_id": "https://newhomesource.com/plan/plan-4-spec/3015278_Plan_4",
+  "accommodationCategory": "Single Family Residence",
+  "offeredBy": "Shea Homes",
   "community_name": "Plan 4 - Spec Home",
-  "property_snapshot": {
-    "name": "Sunset Village",
-    "location": {
-      "county": "Ventura County",
-      "city": "Oxnard",
-      "coordinates": {"latitude": 34.2, "longitude": -119.2}
-    },
-    "status": "active|archived"
+  "listing_status": "active",
+  "address": {
+    "county": "Ventura County",
+    "addressLocality": "Ventura",
+    "addressRegion": "CA",
+    "streetAddress": "10767 Bridgeport Walk",
+    "postalCode": "93004"
   },
   "price_timeline": [
     {
@@ -248,22 +325,33 @@ The system uses **two distinct collections** to manage price data efficiently:
       "source": "stage2", 
       "change_type": "increase",
       "context": {"build_status": ["Move-In Ready"], "build_type": "spec"}
-    },
-    {
-      "date": "2024-02-05T10:30:00Z",
-      "price": 855000,
-      "source": "stage2",
-      "change_type": "decrease", 
-      "context": {"build_status": ["Move-In Ready"], "build_type": "spec"}
     }
   ],
   "aggregated_metrics": {
+    "most_recent_price": 860000,
+    "average_price": 855236,
     "min_price": 850707,
     "max_price": 860000,
-    "avg_price": 855236,
     "total_days_tracked": 21,
-    "volatility_score": 0.54
-  }
+    "moving_averages": {
+      "1_day_average": 860000,
+      "7_day_average": 855236,
+      "30_day_average": 855236,
+      "90_day_average": 855236,
+      "180_day_average": 855236,
+      "365_day_average": 855236
+    },
+    "percent_change_metrics": {
+      "1_day_change": 0,
+      "7_day_change": 0,
+      "30_day_change": 0,
+      "90_day_change": 0,
+      "180_day_change": 0,
+      "365_day_change": 0
+    }
+  },
+  "created_at": "2025-09-06T02:33:37.966Z",
+  "last_updated": "2025-09-06T02:33:37.966Z"
 }
 ```
 
@@ -334,9 +422,8 @@ for doc in today_docs:
 **Step 3: Change Detection** (per community):
 ```python
 # Check previous price for THIS specific community
-last_snapshot = await self.pricehistory_collection.find_one(
-    {"community_id": community_id},  # ← Unique community tracking
-    sort=[("snapshot_date", -1)]
+permanent_record = await self.price_history_permanent_collection.find_one(
+    {"permanent_property_id": permanent_id}  # ← Unique community tracking
 )
 ```
 
@@ -355,7 +442,6 @@ await price_tracker.capture_price_snapshots_from_stage2()
 ```
 ↓ Processes ↓
 - **Each community individually** from `communitydata` collection
-- **Creates snapshots** in `pricehistory` (only when community prices change)
 - **Updates timelines** in `price_history_permanent` (for each community with price changes)
 
 **Property Archival** (Stage 1 archiving process):
@@ -363,9 +449,8 @@ await price_tracker.capture_price_snapshots_from_stage2()
 await price_tracker.consolidate_to_permanent_storage(listing_id)
 ```
 ↓ Results in ↓
-- **Complete timeline** for each community moved to `price_history_permanent`
-- **Archived snapshots** marked in `pricehistory`
-- **Aggregated metrics** calculated per community
+- **Properties marked as archived** in `price_history_permanent`
+- **Aggregated metrics** maintained per community
 
 ### 📊 Price Tracking Logging
 
@@ -400,30 +485,28 @@ The scraper workflow (`.github/workflows/scraper.yml`) specifically looks for th
 
 1. **Property Discovery** (Stage 1) → Basic listing data
 2. **Community Extraction** (Stage 2) → Detailed pricing captured
-3. **Price Snapshot Creation** → `pricehistory` updated (if price changed)
-4. **Permanent Timeline Update** → `price_history_permanent` always updated
-5. **Property Archival** → Complete history consolidated to permanent storage
-6. **Cleanup** → Old `pricehistory` records cleaned after 365 days
+3. **Permanent Timeline Update** → `price_history_permanent` updated (if price changed)
+4. **Property Archival** → Properties marked as archived in permanent storage
 
-### Key Differences Summary
+### Price Tracking Summary
 
-| Aspect | `pricehistory` | `price_history_permanent` |
-|--------|----------------|---------------------------|
-| **Purpose** | Active change tracking | Historical preservation with running ledger |
-| **Trigger** | Community price changes only | Every community price change |
-| **Granularity** | Individual community snapshots | Complete community timelines |
-| **Data Source** | `communitydata` collection | `pricehistory` snapshots + metadata |
-| **Running Ledger** | No (snapshots only) | **YES** (via `$push` to `price_timeline`) |
-| **Tracking Level** | Individual community IDs | Individual community IDs (persistent) |
-| **Retention** | 1 year (configurable) | Forever |
-| **Data Volume** | High (many snapshots) | Moderate (one timeline per community) |
-| **Use Case** | Daily monitoring alerts | Long-term trend analysis |
+| Aspect | `price_history_permanent` |
+|--------|---------------------------|
+| **Purpose** | Historical preservation with running ledger |
+| **Trigger** | Community price changes only |
+| **Granularity** | Complete community timelines |
+| **Data Source** | `communitydata` collection |
+| **Running Ledger** | **YES** (via `$push` to `price_timeline`) |
+| **Tracking Level** | Individual community IDs (persistent) |
+| **Retention** | Forever |
+| **Data Volume** | Moderate (one timeline per community) |
+| **Use Case** | Long-term trend analysis |
 
 ### Performance Optimizations
 
 - **Smart Change Detection**: Only creates snapshots when prices actually change
-- **Automatic Indexing**: Optimized indexes for both collections
-- **Cleanup Automation**: Old snapshots automatically purged
+- **Automatic Indexing**: Optimized indexes for permanent collection
+- **Archive Management**: Properties automatically marked as archived when removed
 - **Permanent ID System**: Properties tracked consistently across URL changes
 
 ## 🔧 Configuration

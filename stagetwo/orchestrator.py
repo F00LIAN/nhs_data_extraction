@@ -38,22 +38,25 @@ class Stage2Orchestrator:
             "error_count": 0
         }
     
-    async def execute_stage2_extraction(self) -> Dict:
+    async def execute_stage2_extraction(self, property_data: Dict = None) -> Dict:
         """
         Execute complete Stage 2 community extraction process.
         
-        Input: None
+        Input: property_data (Dict, optional) - Pre-filtered property data from routing
         Output: Dict with processing statistics and results
         Description: Main orchestration method that coordinates all Stage 2 components
         """
         try:
-            # Step 1: Fetch property data from Stage 1
-            logging.info("🔗 Fetching property data from Stage 1...")
-            property_data = self.data_fetcher.get_property_data()
+            # Step 1: Get property data (either provided or fetch from Stage 1)
+            if property_data is None:
+                logging.info("🔗 Fetching property data from Stage 1...")
+                property_data = self.data_fetcher.get_property_data()
+            else:
+                logging.info("🔗 Using pre-filtered property data from routing...")
             
             if not property_data:
-                logging.error("❌ No property data found from Stage 1")
-                return {"success": False, "error": "No Stage 1 data available"}
+                logging.error("❌ No property data found for Stage 2")
+                return {"success": False, "error": "No Stage 2 data available"}
             
             logging.info(f"✅ Found {len(property_data)} properties to process")
             
@@ -142,17 +145,21 @@ class Stage2Orchestrator:
             await temp_collection.insert_one({"_id": _id, "url": url, "html": html})
             
             # Step 3: Parse HTML
-            # Extract location data from the property data
+            # Extract location data and metadata from the property data
             county = data.get('county')
             address_locality = data.get('addressLocality')
             postal_code = data.get('postalCode')
+            offered_by = data.get('offeredBy')
+            accommodation_category = data.get('accommodationCategory')
             
             extracted_info = self.html_parser.extract_community_data(
                 html=html,
                 homepage_id=_id,
                 address_locality=address_locality,
                 county=county,
-                postal_code=postal_code
+                postal_code=postal_code,
+                offered_by=offered_by,
+                accommodation_category=accommodation_category
             )
             communities = extracted_info.get("communities", [])
             
@@ -226,7 +233,9 @@ class Stage2Orchestrator:
                             homepage_id=_id,
                             address_locality=homepage_data.get('property_data', {}).get('address', {}).get('addressLocality'),
                             county=homepage_data.get('property_data', {}).get('address', {}).get('county'),
-                            postal_code=homepage_data.get('property_data', {}).get('address', {}).get('postalCode')
+                            postal_code=homepage_data.get('property_data', {}).get('address', {}).get('postalCode'),
+                            offered_by=homepage_data.get('property_data', {}).get('offers', {}).get('offeredBy'),
+                            accommodation_category=homepage_data.get('property_data', {}).get('accommodationCategory')
                         )
                         communities = extracted_info.get("communities", [])
                         

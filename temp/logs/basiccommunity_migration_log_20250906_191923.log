@@ -1,0 +1,146 @@
+2025-09-06 19:19:23,470 - INFO - 📋 Basic community migration started - Log: C:\NHP\src\scraper\temp\logs\basiccommunity_migration_log_20250906_191923.log
+2025-09-06 19:19:23,471 - INFO - 🚀 Starting basic community migration from communitydata to basiccommunitydata
+2025-09-06 19:19:24,519 - INFO - ✅ Connected to MongoDB successfully
+2025-09-06 19:19:24,520 - INFO - 🔍 Scanning communitydata collection for basic community listings...
+2025-09-06 19:19:25,592 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-203598/corterra-villas-of-palm-desert-palm-desert-ca-92211_Corterra_Villas_of_Palm_Desert
+2025-09-06 19:19:25,598 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-208001/esprit-palm-desert-ca-92211_Esprit
+2025-09-06 19:19:25,598 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-208006/nova-at-university-park-palm-desert-ca-92211_Nova_At_University_Park
+2025-09-06 19:19:25,598 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-194400/aventura-palms-desert-hot-springs-ca-92240_Aventura_Palms
+2025-09-06 19:19:25,598 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-211419/12-at-las-palmas-palm-springs-ca-92262_12_at_Las_Palmas
+2025-09-06 19:19:25,598 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-207716/westside-renaissance-ventura-ca-93001_Westside_Renaissance
+2025-09-06 19:19:25,599 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-194738/beachwalk-oxnard-ca-93035_Beachwalk
+2025-09-06 19:19:25,599 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-205462/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:25,599 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-155694/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:25,599 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-206913/lost-canyons-simi-valley-ca-93065_Lost_Canyons
+2025-09-06 19:19:25,599 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-205123/virada-indio-ca-92203_Virada
+2025-09-06 19:19:25,599 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-191400/andalusia-country-club-la-quinta-ca-92253_Andalusia_Country_Club
+2025-09-06 19:19:25,600 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-205120/the-cove-at-the-citrus-la-quinta-ca-92253_The_Cove_At_The_Citrus
+2025-09-06 19:19:25,600 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-200192/toscana-country-club-indian-wells-ca-92210_Toscana_Country_Club
+2025-09-06 19:19:25,600 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-208009/university-park-palm-desert-ca-92211_University_Park
+2025-09-06 19:19:25,600 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-205125/viridian-at-desert-willow-palm-desert-ca-92260_Viridian_at_Desert_Willow
+2025-09-06 19:19:25,600 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-207549/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:25,600 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-207998/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:25,601 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-208066/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:25,601 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-205068/the-fairways-beaumont-ca-92223_The_Fairways
+2025-09-06 19:19:25,601 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-209775/winchester-hills-tricon-woods-winchester-ca-92596_Winchester_Hills/Tricon_Woods
+2025-09-06 19:19:25,601 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-206254/rancho-california-temecula-ca-92591_Rancho_California
+2025-09-06 19:19:25,601 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-202717/las-alturas-temecula-ca-92590_Las_Alturas
+2025-09-06 19:19:25,601 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-206233/goldware-senior-housing-riverside-ca-92504_Goldware_Senior_Housing
+2025-09-06 19:19:25,602 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-206915/legado-riverside-ca-92503_Legado
+2025-09-06 19:19:25,602 - INFO - 🏠 Found basic community: https://www.newhomesource.com/basiccommunity/community-206278/corona-villas-corona-ca-92882_Corona_Villas
+2025-09-06 19:19:25,602 - INFO - 📊 Scan complete: 26 basic communities found in 213 total documents
+2025-09-06 19:19:25,602 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-203598/corterra-villas-of-palm-desert-palm-desert-ca-92211_Corterra_Villas_of_Palm_Desert
+2025-09-06 19:19:25,764 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-203598/corterra-villas-of-palm-desert-palm-desert-ca-92211_Corterra_Villas_of_Palm_Desert
+2025-09-06 19:19:25,848 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-203598/corterra-villas-of-palm-desert-palm-desert-ca-92211_Corterra_Villas_of_Palm_Desert
+2025-09-06 19:19:25,848 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-208001/esprit-palm-desert-ca-92211_Esprit
+2025-09-06 19:19:26,010 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-208001/esprit-palm-desert-ca-92211_Esprit
+2025-09-06 19:19:26,089 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-208001/esprit-palm-desert-ca-92211_Esprit
+2025-09-06 19:19:26,090 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-208006/nova-at-university-park-palm-desert-ca-92211_Nova_At_University_Park
+2025-09-06 19:19:26,250 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-208006/nova-at-university-park-palm-desert-ca-92211_Nova_At_University_Park
+2025-09-06 19:19:26,330 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-208006/nova-at-university-park-palm-desert-ca-92211_Nova_At_University_Park
+2025-09-06 19:19:26,330 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-194400/aventura-palms-desert-hot-springs-ca-92240_Aventura_Palms
+2025-09-06 19:19:26,504 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-194400/aventura-palms-desert-hot-springs-ca-92240_Aventura_Palms
+2025-09-06 19:19:26,593 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-194400/aventura-palms-desert-hot-springs-ca-92240_Aventura_Palms
+2025-09-06 19:19:26,594 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-211419/12-at-las-palmas-palm-springs-ca-92262_12_at_Las_Palmas
+2025-09-06 19:19:26,756 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-211419/12-at-las-palmas-palm-springs-ca-92262_12_at_Las_Palmas
+2025-09-06 19:19:26,837 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-211419/12-at-las-palmas-palm-springs-ca-92262_12_at_Las_Palmas
+2025-09-06 19:19:26,837 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-207716/westside-renaissance-ventura-ca-93001_Westside_Renaissance
+2025-09-06 19:19:26,997 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-207716/westside-renaissance-ventura-ca-93001_Westside_Renaissance
+2025-09-06 19:19:27,078 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-207716/westside-renaissance-ventura-ca-93001_Westside_Renaissance
+2025-09-06 19:19:27,078 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-194738/beachwalk-oxnard-ca-93035_Beachwalk
+2025-09-06 19:19:27,247 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-194738/beachwalk-oxnard-ca-93035_Beachwalk
+2025-09-06 19:19:27,328 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-194738/beachwalk-oxnard-ca-93035_Beachwalk
+2025-09-06 19:19:27,328 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-205462/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:27,498 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-205462/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:27,577 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-205462/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:27,577 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-155694/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:27,759 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-155694/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:27,840 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-155694/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:27,840 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-206913/lost-canyons-simi-valley-ca-93065_Lost_Canyons
+2025-09-06 19:19:28,000 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-206913/lost-canyons-simi-valley-ca-93065_Lost_Canyons
+2025-09-06 19:19:28,080 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-206913/lost-canyons-simi-valley-ca-93065_Lost_Canyons
+2025-09-06 19:19:28,080 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-205123/virada-indio-ca-92203_Virada
+2025-09-06 19:19:28,239 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-205123/virada-indio-ca-92203_Virada
+2025-09-06 19:19:28,329 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-205123/virada-indio-ca-92203_Virada
+2025-09-06 19:19:28,330 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-191400/andalusia-country-club-la-quinta-ca-92253_Andalusia_Country_Club
+2025-09-06 19:19:28,489 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-191400/andalusia-country-club-la-quinta-ca-92253_Andalusia_Country_Club
+2025-09-06 19:19:28,574 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-191400/andalusia-country-club-la-quinta-ca-92253_Andalusia_Country_Club
+2025-09-06 19:19:28,576 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-205120/the-cove-at-the-citrus-la-quinta-ca-92253_The_Cove_At_The_Citrus
+2025-09-06 19:19:28,734 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-205120/the-cove-at-the-citrus-la-quinta-ca-92253_The_Cove_At_The_Citrus
+2025-09-06 19:19:28,818 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-205120/the-cove-at-the-citrus-la-quinta-ca-92253_The_Cove_At_The_Citrus
+2025-09-06 19:19:28,818 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-200192/toscana-country-club-indian-wells-ca-92210_Toscana_Country_Club
+2025-09-06 19:19:28,977 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-200192/toscana-country-club-indian-wells-ca-92210_Toscana_Country_Club
+2025-09-06 19:19:29,060 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-200192/toscana-country-club-indian-wells-ca-92210_Toscana_Country_Club
+2025-09-06 19:19:29,062 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-208009/university-park-palm-desert-ca-92211_University_Park
+2025-09-06 19:19:29,225 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-208009/university-park-palm-desert-ca-92211_University_Park
+2025-09-06 19:19:29,305 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-208009/university-park-palm-desert-ca-92211_University_Park
+2025-09-06 19:19:29,305 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-205125/viridian-at-desert-willow-palm-desert-ca-92260_Viridian_at_Desert_Willow
+2025-09-06 19:19:29,471 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-205125/viridian-at-desert-willow-palm-desert-ca-92260_Viridian_at_Desert_Willow
+2025-09-06 19:19:29,549 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-205125/viridian-at-desert-willow-palm-desert-ca-92260_Viridian_at_Desert_Willow
+2025-09-06 19:19:29,551 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-207549/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:29,708 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-207549/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:29,791 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-207549/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:29,791 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-207998/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:29,953 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-207998/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:30,035 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-207998/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:30,035 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-208066/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:30,200 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-208066/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:30,281 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-208066/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:30,282 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-205068/the-fairways-beaumont-ca-92223_The_Fairways
+2025-09-06 19:19:30,442 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-205068/the-fairways-beaumont-ca-92223_The_Fairways
+2025-09-06 19:19:30,526 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-205068/the-fairways-beaumont-ca-92223_The_Fairways
+2025-09-06 19:19:30,526 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-209775/winchester-hills-tricon-woods-winchester-ca-92596_Winchester_Hills/Tricon_Woods
+2025-09-06 19:19:30,687 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-209775/winchester-hills-tricon-woods-winchester-ca-92596_Winchester_Hills/Tricon_Woods
+2025-09-06 19:19:30,767 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-209775/winchester-hills-tricon-woods-winchester-ca-92596_Winchester_Hills/Tricon_Woods
+2025-09-06 19:19:30,767 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-206254/rancho-california-temecula-ca-92591_Rancho_California
+2025-09-06 19:19:30,927 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-206254/rancho-california-temecula-ca-92591_Rancho_California
+2025-09-06 19:19:31,008 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-206254/rancho-california-temecula-ca-92591_Rancho_California
+2025-09-06 19:19:31,009 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-202717/las-alturas-temecula-ca-92590_Las_Alturas
+2025-09-06 19:19:31,166 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-202717/las-alturas-temecula-ca-92590_Las_Alturas
+2025-09-06 19:19:31,247 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-202717/las-alturas-temecula-ca-92590_Las_Alturas
+2025-09-06 19:19:31,247 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-206233/goldware-senior-housing-riverside-ca-92504_Goldware_Senior_Housing
+2025-09-06 19:19:31,411 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-206233/goldware-senior-housing-riverside-ca-92504_Goldware_Senior_Housing
+2025-09-06 19:19:31,492 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-206233/goldware-senior-housing-riverside-ca-92504_Goldware_Senior_Housing
+2025-09-06 19:19:31,493 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-206915/legado-riverside-ca-92503_Legado
+2025-09-06 19:19:31,652 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-206915/legado-riverside-ca-92503_Legado
+2025-09-06 19:19:31,733 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-206915/legado-riverside-ca-92503_Legado
+2025-09-06 19:19:31,733 - INFO - 🔄 Migrating basic community: https://www.newhomesource.com/basiccommunity/community-206278/corona-villas-corona-ca-92882_Corona_Villas
+2025-09-06 19:19:31,894 - INFO - ✅ Basic community inserted/updated in basiccommunitydata: https://www.newhomesource.com/basiccommunity/community-206278/corona-villas-corona-ca-92882_Corona_Villas
+2025-09-06 19:19:31,986 - INFO - 🗑️ Removed basic community from communitydata: https://www.newhomesource.com/basiccommunity/community-206278/corona-villas-corona-ca-92882_Corona_Villas
+2025-09-06 19:19:31,986 - INFO - 📊 BASIC COMMUNITY MIGRATION SUMMARY
+2025-09-06 19:19:31,988 - INFO - ==================================================
+2025-09-06 19:19:31,988 - INFO - ⏱️ Duration: 0:00:08.516142
+2025-09-06 19:19:31,988 - INFO - 📋 Total documents checked: 213
+2025-09-06 19:19:31,988 - INFO - 🏠 Basic communities found: 26
+2025-09-06 19:19:31,988 - INFO - ✅ Successfully migrated: 26
+2025-09-06 19:19:31,988 - INFO - 🗑️ Removed from communitydata: 26
+2025-09-06 19:19:31,989 - INFO - ❌ Errors encountered: 0
+2025-09-06 19:19:31,989 - INFO - ✅ Successfully migrated listings:
+2025-09-06 19:19:31,989 - INFO -    - https://www.newhomesource.com/basiccommunity/community-203598/corterra-villas-of-palm-desert-palm-desert-ca-92211_Corterra_Villas_of_Palm_Desert
+2025-09-06 19:19:31,989 - INFO -    - https://www.newhomesource.com/basiccommunity/community-208001/esprit-palm-desert-ca-92211_Esprit
+2025-09-06 19:19:31,989 - INFO -    - https://www.newhomesource.com/basiccommunity/community-208006/nova-at-university-park-palm-desert-ca-92211_Nova_At_University_Park
+2025-09-06 19:19:31,989 - INFO -    - https://www.newhomesource.com/basiccommunity/community-194400/aventura-palms-desert-hot-springs-ca-92240_Aventura_Palms
+2025-09-06 19:19:31,989 - INFO -    - https://www.newhomesource.com/basiccommunity/community-211419/12-at-las-palmas-palm-springs-ca-92262_12_at_Las_Palmas
+2025-09-06 19:19:31,989 - INFO -    - https://www.newhomesource.com/basiccommunity/community-207716/westside-renaissance-ventura-ca-93001_Westside_Renaissance
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-194738/beachwalk-oxnard-ca-93035_Beachwalk
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-205462/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-155694/green-island-villas-moorpark-ca-93021_Green_Island_Villas
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-206913/lost-canyons-simi-valley-ca-93065_Lost_Canyons
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-205123/virada-indio-ca-92203_Virada
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-191400/andalusia-country-club-la-quinta-ca-92253_Andalusia_Country_Club
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-205120/the-cove-at-the-citrus-la-quinta-ca-92253_The_Cove_At_The_Citrus
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-200192/toscana-country-club-indian-wells-ca-92210_Toscana_Country_Club
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-208009/university-park-palm-desert-ca-92211_University_Park
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-205125/viridian-at-desert-willow-palm-desert-ca-92260_Viridian_at_Desert_Willow
+2025-09-06 19:19:31,990 - INFO -    - https://www.newhomesource.com/basiccommunity/community-207549/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-207998/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-208066/cotino-rancho-mirage-ca-92270_Cotino
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-205068/the-fairways-beaumont-ca-92223_The_Fairways
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-209775/winchester-hills-tricon-woods-winchester-ca-92596_Winchester_Hills/Tricon_Woods
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-206254/rancho-california-temecula-ca-92591_Rancho_California
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-202717/las-alturas-temecula-ca-92590_Las_Alturas
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-206233/goldware-senior-housing-riverside-ca-92504_Goldware_Senior_Housing
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-206915/legado-riverside-ca-92503_Legado
+2025-09-06 19:19:31,991 - INFO -    - https://www.newhomesource.com/basiccommunity/community-206278/corona-villas-corona-ca-92882_Corona_Villas
+2025-09-06 19:19:31,992 - INFO - 🎉 All basic community migrations completed successfully!
+2025-09-06 19:19:32,075 - INFO - 🔌 MongoDB connection closed

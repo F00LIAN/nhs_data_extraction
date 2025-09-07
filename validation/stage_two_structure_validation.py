@@ -116,6 +116,9 @@ def validate_community_item_structure(community: Dict[str, Any], index: int = No
     - county: County name
     - address_locality: City/locality
     - postal_code: ZIP code
+    
+    - offeredBy: Developer/builder name from homepagedata
+    - accommodationCategory: Property type from homepagedata
     """
     if not isinstance(community, dict):
         logging.warning(f"Community item {index} is not a dictionary")
@@ -123,9 +126,9 @@ def validate_community_item_structure(community: Dict[str, Any], index: int = No
     
     # Check required fields
     required_fields = [
-        "build_status", "name", "url", "image", "build_type", 
+        "build_status", "name", "url", "image", "address", "build_type", 
         "price", "price_currency", "community_id", "card_index",
-        "county", "address_locality", "postal_code"
+        "offeredBy", "accommodationCategory"
     ]
     
     for field in required_fields:
@@ -176,6 +179,30 @@ def validate_community_item_structure(community: Dict[str, Any], index: int = No
     card_index = community.get("card_index")
     if not isinstance(card_index, int) or card_index < 0:
         logging.warning(f"card_index should be a non-negative integer in community item {index}")
+        return False
+    
+    # Validate offeredBy
+    offered_by = community.get("offeredBy")
+    if not isinstance(offered_by, str) or len(offered_by.strip()) == 0:
+        logging.warning(f"offeredBy should be a non-empty string in community item {index}")
+        return False
+    
+    # Validate accommodationCategory
+    accommodation_category = community.get("accommodationCategory")
+    if not isinstance(accommodation_category, str) or len(accommodation_category.strip()) == 0:
+        logging.warning(f"accommodationCategory should be a non-empty string in community item {index}")
+        return False
+    
+    # Validate address structure
+    address = community.get("address")
+    if not isinstance(address, dict):
+        logging.warning(f"address should be a dictionary in community item {index}")
+        return False
+    
+    # Validate county field within address
+    address_county = address.get("county")
+    if address_county and not isinstance(address_county, str):
+        logging.warning(f"county within address should be a string in community item {index}")
         return False
     
     return True

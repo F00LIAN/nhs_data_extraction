@@ -1,0 +1,63 @@
+{
+    "_id": {
+        "$oid": "68ad3d5a98ee059db107eb44"
+    },
+    "permanent_property_id": "md5-hash-of-community-id",
+    "community_id": "https://newhomesource.com/plan/plan-4-spec/3015278_Plan_4",
+    "accommodationCategory": "Single Family Residence",
+    "offeredBy": "Shea Homes",
+    "community_name": "Plan 4 - Spec Home",
+    "listing_status": "active",
+    "address": {
+        "county": "Ventura County",
+        "addressLocality": "Ventura",
+        "addressRegion": "CA",
+        "streetAddress": "10767 Bridgeport Walk",
+        "postalCode": "93004"
+    },
+    "price_timeline": [
+        { // scraper is ran daily, so each day is a new entry
+            "date": "2024-01-15T10:30:00Z",
+            "price": 850707,
+            "source": "stage2",
+            "change_type": "increase",
+            "context": {"build_status": ["Move-In Ready"], "build_type": "spec"}
+        },
+        {
+            "date": "2024-01-22T10:30:00Z",
+            "price": 860000,
+            "source": "stage2",
+            "change_type": "increase",
+            "context": {"build_status": ["Move-In Ready"], "build_type": "spec"}
+        }
+    ],
+    "aggregated_metrics": {
+        "most_recent_price": 860000,
+        "average_price": 855236,
+        "min_price": 850707,
+        "max_price": 860000,
+        "total_days_tracked": 21,
+        "moving_averages": {
+            "1_day_average": 855236,
+            "7_day_average": 855236,
+            "30_day_average": 855236,
+            "90_day_average": 855236,
+            "180_day_average": 855236,
+            "365_day_average": 855236
+        },
+        "percent_change_metrics": {
+            "1_day_change": 0,
+            "7_day_change": 0,
+            "30_day_change": 0,
+            "90_day_change": 0,
+            "180_day_change": 0,
+            "365_day_change": 0,
+        } //potentialy add more?
+    }, 
+    "created_at": {
+        "$date": "2025-09-06T02:33:37.966Z"
+    },
+    "last_updated": {
+        "$date": "2025-09-06T02:33:37.966Z"
+    }
+}

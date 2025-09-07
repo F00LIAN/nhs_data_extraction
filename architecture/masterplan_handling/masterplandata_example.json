@@ -1,0 +1,27 @@
+{
+    "_id": {
+      "$oid": "68ad3d5a98ee059db107eb44"
+    },
+    "masterplanlisting_id": "https://www.newhomesource.com/masterplan/ca/santa-paula/harvest-at-limoneira/152225_Harvest_at_Limoneira",
+    "scraped_at": {
+      "$date": "2025-09-06T02:33:37.966Z"
+    },
+    "source_url": "https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1",
+    "masterplan_data": { //change to masterplan_data from property_data
+      "price_range": "$699,852 - $854,989", //change to price_range from price
+      "name": "Harvest at Limoneira",
+      "url": "https://www.newhomesource.com/masterplan/ca/santa-paula/harvest-at-limoneira/152225",
+      "address": {
+        "formatted_address": "Santa Paula, CA 93060",
+        "county": "Ventura County"
+      }
+    },
+    "data_source": "html_fallback",
+    "listing_status": "active",
+    "last_updated": {
+      "$date": "2025-09-05T02:34:25.517Z"
+    },
+    "previous_scraped_at": {
+      "$date": "2025-09-04T02:35:00.518Z"
+    }
+  }
