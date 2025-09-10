@@ -5,7 +5,7 @@ Handles masterplan detection and routing between Stage 1 and Stage 2
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
@@ -21,6 +21,7 @@ class StageOneAndTwoCheck:
         self.client = None
         self.db = None
         self.homepagedata_collection = None
+        self.homepagedata_archived_collection = None
         self.masterplandata_collection = None
         self.basiccommunitydata_collection = None
         
@@ -32,6 +33,7 @@ class StageOneAndTwoCheck:
             self.db = self.client['newhomesource']
             
             self.homepagedata_collection = self.db['homepagedata']
+            self.homepagedata_archived_collection = self.db['homepagedata_archived']
             self.masterplandata_collection = self.db['masterplandata']
             self.basiccommunitydata_collection = self.db['basiccommunitydata']
             
@@ -249,6 +251,9 @@ class StageOneAndTwoCheck:
                     "property_data.address.county": 1,
                     "property_data.address.addressLocality": 1,
                     "property_data.address.postalCode": 1,
+                    "property_data.Address.county": 1,
+                    "property_data.Address.addressLocality": 1,
+                    "property_data.Address.postalCode": 1,
                     "property_data.offers.offeredBy": 1,
                     "property_data.accommodationCategory": 1
                 }
@@ -256,14 +261,18 @@ class StageOneAndTwoCheck:
             
             async for doc in cursor:
                 if "_id" in doc and "property_data" in doc and "url" in doc["property_data"]:
+                    # Handle both "Address" (capital) and "address" (lowercase) field names
+                    property_data_obj = doc.get("property_data", {})
+                    address_data = property_data_obj.get("Address") or property_data_obj.get("address", {})
+                    
                     property_data[doc["_id"]] = {
-                        "url": doc["property_data"]["url"],
+                        "url": property_data_obj["url"],
                         "listing_id": doc.get("listing_id"),
-                        "county": doc.get("property_data", {}).get("address", {}).get("county"),
-                        "addressLocality": doc.get("property_data", {}).get("address", {}).get("addressLocality"),
-                        "postalCode": doc.get("property_data", {}).get("address", {}).get("postalCode"),
-                        "offeredBy": doc.get("property_data", {}).get("offers", {}).get("offeredBy"),
-                        "accommodationCategory": doc.get("property_data", {}).get("accommodationCategory")
+                        "county": address_data.get("county"),
+                        "addressLocality": address_data.get("addressLocality"),
+                        "postalCode": address_data.get("postalCode"),
+                        "offeredBy": property_data_obj.get("offers", {}).get("offeredBy"),
+                        "accommodationCategory": property_data_obj.get("accommodationCategory")
                     }
             
             logging.info(f"✅ Found {len(property_data)} regular communities for Stage 2")
@@ -272,6 +281,59 @@ class StageOneAndTwoCheck:
         except Exception as e:
             logging.error(f"❌ Error getting regular communities for Stage 2: {e}")
             return {}
+    
+    async def handle_missing_stage1_listings(self):
+        """Handle listings that are missing from current Stage 1 scrape"""
+        try:
+            # Get current active listings from today's scrape
+            today = datetime.now().date()
+            today_start = datetime.combine(today, datetime.min.time())
+            tomorrow_start = today_start + timedelta(days=1)
+            
+            current_listings = set()
+            async for doc in self.homepagedata_collection.find({
+                "scraped_at": {"$gte": today_start.isoformat(), "$lt": tomorrow_start.isoformat()}
+            }, {"listing_id": 1}):
+                current_listings.add(doc.get("listing_id"))
+            
+            # Get all previously active listings
+            previous_listings = set()
+            async for doc in self.homepagedata_collection.find({
+                "listing_status": {"$in": ["active", "new", "updated"]},
+                "scraped_at": {"$lt": today_start.isoformat()}
+            }, {"listing_id": 1}):
+                previous_listings.add(doc.get("listing_id"))
+            
+            # Find missing listings
+            missing_listings = previous_listings - current_listings
+            
+            if not missing_listings:
+                logging.info("✅ No missing Stage 1 listings detected")
+                return
+            
+            logging.info(f"📦 Archiving {len(missing_listings)} missing Stage 1 listings")
+            
+            # Move missing listings to archive
+            for listing_id in missing_listings:
+                doc = await self.homepagedata_collection.find_one({"listing_id": listing_id})
+                if doc:
+                    # Add archive metadata
+                    doc["listing_status"] = "archived"
+                    doc["archived_at"] = datetime.now()
+                    doc["archive_reason"] = "missing from current Stage 1 scrape"
+                    
+                    # Insert to archive collection
+                    await self.homepagedata_archived_collection.insert_one(doc)
+                    
+                    # Remove from active collection
+                    await self.homepagedata_collection.delete_one({"listing_id": listing_id})
+                    
+                    logging.info(f"📦 Moved {listing_id} to homepagedata_archived")
+            
+            logging.info(f"✅ Successfully archived {len(missing_listings)} Stage 1 listings")
+            
+        except Exception as e:
+            logging.error(f"❌ Error handling missing Stage 1 listings: {e}")
     
     def close_connection(self):
         """Close MongoDB connection"""
@@ -293,6 +355,9 @@ async def process_stage_one_to_two_routing():
         if not await checker.connect_to_mongodb():
             logging.error("❌ Failed to connect to MongoDB")
             return {}
+        
+        # Handle missing Stage 1 listings first
+        await checker.handle_missing_stage1_listings()
         
         # Process Stage 1 results and separate special vs regular communities
         regular_listings, masterplan_listings, basiccommunity_listings = await checker.process_stage_one_results()

@@ -1,0 +1,14 @@
+Missing Community IDs Analysis - Generated on 2025-09-09 18:58:22.052403
+============================================================
+
+Total community IDs in price_history_permanent: 1200
+Total community IDs in communitydata: 1222
+Missing from communitydata: 2
+
+Pattern Analysis:
+  specdetail: 2 missing IDs
+
+All Missing Community IDs:
+----------------------------------------
+https://www.newhomesource.com/specdetail/8105-tristan-lnmodel-riverside-ca-92507/3059318_Gateway
+https://www.newhomesource.com/specdetail/8117-tristan-lnmodel-riverside-ca-92507/3059317_Bellwood

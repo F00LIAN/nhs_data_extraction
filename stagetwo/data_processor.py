@@ -31,7 +31,7 @@ class DataProcessor:
         Connect to MongoDB collections.
         
         Input: None
-        Output: Tuple[client, homepagedata_collection, communitydata_collection, temp_collection]
+        Output: Tuple[client, homepagedata_collection, communitydata_collection, communitydata_archived_collection, temp_collection]
         Description: Establishes async connections to required MongoDB collections
         """
         try:
@@ -41,6 +41,7 @@ class DataProcessor:
                 client,
                 db['homepagedata'],
                 db['communitydata'],
+                db['communitydata_archived'],
                 db['temphtml']
             )
         except Exception as e:
@@ -95,7 +96,16 @@ class DataProcessor:
                 
                 # Validate document structure before database insertion
                 if not validate_community_document_structure(community_doc):
-                    logging.warning(f"⚠️ Skipping invalid community document structure for listing: {listing_id}")
+                    logging.error(f"❌ VALIDATION FAILED for NEW listing: {listing_id}")
+                    logging.error(f"❌ Document structure: {list(community_doc.keys())}")
+                    logging.error(f"❌ Communities count: {len(new_communities)}")
+                    if new_communities:
+                        first_community = new_communities[0]
+                        logging.error(f"❌ First community keys: {list(first_community.keys())}")
+                        if 'address' in first_community:
+                            logging.error(f"❌ First community address: {first_community['address']}")
+                        else:
+                            logging.error(f"❌ First community has NO ADDRESS FIELD!")
                     return "error", {}
                 
                 await communitydata_collection.update_one(
@@ -130,7 +140,16 @@ class DataProcessor:
                 
                 # Validate document structure before database insertion
                 if not validate_community_document_structure(community_doc):
-                    logging.warning(f"⚠️ Skipping invalid community document structure for listing: {listing_id}")
+                    logging.error(f"❌ VALIDATION FAILED for UPDATED listing: {listing_id}")
+                    logging.error(f"❌ Document structure: {list(community_doc.keys())}")
+                    logging.error(f"❌ Communities count: {len(new_communities)}")
+                    if new_communities:
+                        first_community = new_communities[0]
+                        logging.error(f"❌ First community keys: {list(first_community.keys())}")
+                        if 'address' in first_community:
+                            logging.error(f"❌ First community address: {first_community['address']}")
+                        else:
+                            logging.error(f"❌ First community has NO ADDRESS FIELD!")
                     return "error", {}
                 
                 await communitydata_collection.update_one(
@@ -216,7 +235,7 @@ class DataProcessor:
         Output: bool - True if changes detected
         Description: Compares key fields to determine if community data has been updated
         """
-        compare_fields = ["name", "price", "build_status", "build_type", "url"]
+        compare_fields = ["name", "price", "build_status", "build_type", "url", "address"]
         
         for field in compare_fields:
             existing_value = existing_community.get(field)
@@ -229,20 +248,35 @@ class DataProcessor:
                     new_value = float(new_value) if new_value else 0
                 except:
                     pass
+            # Special comparison for address field (nested dict)
+            elif field == "address":
+                # Compare address presence and key address fields
+                existing_has_address = bool(existing_value and isinstance(existing_value, dict))
+                new_has_address = bool(new_value and isinstance(new_value, dict))
+                
+                if existing_has_address != new_has_address:
+                    return True
+                
+                if existing_has_address and new_has_address:
+                    # Compare key address fields
+                    address_fields = ["addressLocality", "addressRegion", "postalCode", "county", "streetAddress"]
+                    for addr_field in address_fields:
+                        if existing_value.get(addr_field) != new_value.get(addr_field):
+                            return True
             
-            if existing_value != new_value:
+            elif existing_value != new_value:
                 return True
         
         return False
     
     async def handle_removed_listings(self, existing_listing_ids: Set, processed_listing_ids: Set, 
-                                    communitydata_collection):
+                                    communitydata_collection, communitydata_archived_collection):
         """
         Handle listings that were removed from current scrape.
         
-        Input: existing_listing_ids (Set), processed_listing_ids (Set), collection
+        Input: existing_listing_ids (Set), processed_listing_ids (Set), collections
         Output: None
-        Description: Archives listings that exist in DB but not in current scrape (with safety checks)
+        Description: Archives listings that exist in DB but not in current scrape and moves to archive collection
         """
         try:
             removed_listing_ids = existing_listing_ids - processed_listing_ids
@@ -261,21 +295,52 @@ class DataProcessor:
             
             logging.info(f"🗑️ Archiving {len(removed_listing_ids)} removed community listings")
             
-            # Mark as archived (don't delete - keep for historical analysis)
+            # Move to archive collection and remove from active
             for listing_id in removed_listing_ids:
-                await communitydata_collection.update_one(
-                    {"listing_id": listing_id},
-                    {"$set": {
-                        "listing_status": "archived",
-                        "archived_at": datetime.now(),
-                        "archive_reason": "missing from current Stage 2 scrape"
-                    }}
-                )
+                # Get the document to archive
+                doc = await communitydata_collection.find_one({"listing_id": listing_id})
+                if doc:
+                    # Add archive metadata
+                    doc["listing_status"] = "archived"
+                    doc["archived_at"] = datetime.now()
+                    doc["archive_reason"] = "missing from current Stage 2 scrape"
+                    
+                    # Insert to archive collection
+                    await communitydata_archived_collection.insert_one(doc)
+                    
+                    # Remove from active collection
+                    await communitydata_collection.delete_one({"listing_id": listing_id})
+                    
+                    logging.info(f"📦 Moved {listing_id} to communitydata_archived")
             
-            logging.info(f"📦 Successfully archived {len(removed_listing_ids)} community listings")
+            # Trigger price history archiving for archived communities
+            if removed_listing_ids:
+                await self._trigger_price_history_archiving()
+            
+            logging.info(f"✅ Successfully archived {len(removed_listing_ids)} community listings")
             
         except Exception as e:
             logging.error(f"❌ Error handling removed community listings: {e}")
+    
+    async def _trigger_price_history_archiving(self):
+        """Trigger price history archiving for newly archived communities"""
+        try:
+            logging.info("🔗 Triggering price history archiving for archived communities...")
+            
+            # Import here to avoid circular imports
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from shared.price_tracker import PriceTracker
+            
+            price_tracker = PriceTracker()
+            await price_tracker.connect_to_mongodb()
+            await price_tracker._handle_archived_communities()
+            price_tracker.close_connection()
+            
+            logging.info("✅ Price history archiving triggered successfully")
+        except Exception as e:
+            logging.error(f"❌ Error triggering price history archiving: {e}")
     
     async def capture_price_snapshots(self):
         """

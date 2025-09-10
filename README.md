@@ -12,16 +12,18 @@ This scraper system is designed to create and maintain a comprehensive database 
 
 ## 🗄️ Database Architecture
 
-The system builds a MongoDB database with six main collections:
+The system builds a MongoDB database with eight main collections:
 
 | Collection | Purpose | Data Source |
 |------------|---------|-------------|
 | `homepagedata` | Basic property listings and metadata | Stage 1 |
+| `homepagedata_archived` | Archived Stage 1 listings | Stage 1→2 Router |
 | `communitydata` | Detailed community and neighborhood info | Stage 2 |
+| `communitydata_archived` | Archived Stage 2 listings | Stage 2 Processor |
 | `masterplandata` | Masterplan community data (separate processing) | Stage 1→2 Router |
 | `basiccommunitydata` | Basic community data (separate processing) | Stage 1→2 Router |
 | `price_history_permanent` | Long-term price trend analysis | Price Tracker |
-| `archivedlistings` | Historical record of removed properties | Stage 1 |
+| `price_history_permanent_archived` | Archived price histories | Price Tracker |
 
 ## 🏗️ System Architecture
 
@@ -229,6 +231,91 @@ await communitydata_collection.update_one(
 - **Update Tracking**: `previous_scraped_at` field tracks last update
 - **Change Detection**: Only meaningful changes trigger updates
 - **Atomic Operations**: Database consistency maintained
+
+#### Archiving & Lifecycle Management
+
+**Missing Listing Detection & Archiving:**
+
+**Stage 1 Missing Listings:**
+```python
+# Detect listings missing from current scrape
+missing_listings = previous_active_listings - current_scrape_listings
+
+# Move to archive collection
+for listing_id in missing_listings:
+    doc["listing_status"] = "archived"
+    doc["archived_at"] = datetime.now()
+    doc["archive_reason"] = "missing from current Stage 1 scrape"
+    
+    await homepagedata_archived_collection.insert_one(doc)
+    await homepagedata_collection.delete_one({"listing_id": listing_id})
+```
+
+**Stage 2 Missing Listings:**
+```python
+# Move archived communities to separate collection
+for listing_id in removed_listing_ids:
+    doc["listing_status"] = "archived"
+    doc["archived_at"] = datetime.now()
+    doc["archive_reason"] = "missing from current Stage 2 scrape"
+    
+    await communitydata_archived_collection.insert_one(doc)
+    await communitydata_collection.delete_one({"listing_id": listing_id})
+```
+
+**Price History Archiving:**
+```python
+# When communities are archived, move price history too
+price_doc["archived_at"] = datetime.now()
+price_doc["archive_reason"] = "community archived"
+
+await price_history_permanent_archived_collection.insert_one(price_doc)
+await price_history_permanent_collection.delete_one({"permanent_property_id": id})
+```
+
+**Archive Features:**
+- **Automatic Detection**: Missing listings identified daily
+- **Safe Archiving**: >50% removal rate triggers safety check
+- **Metadata Preservation**: Archive reason and timestamp recorded
+- **Price History Sync**: Related price data archived together
+
+#### Database Archiving Rule Enforcement
+
+**CRITICAL RULE**: When `communitydata.listing_status = "archived"` → **AUTOMATICALLY** archive related `price_history_permanent` records
+
+**Implementation:**
+```python
+# Triggered in two scenarios:
+# 1. Immediately after Stage 2 community archiving
+# 2. During daily price tracking runs
+
+async def _handle_archived_communities(self):
+    """DATABASE RULE: communitydata archived -> price_history_permanent archived"""
+    
+    # Find all archived communities
+    archived_docs = await communitydata_collection.find({"listing_status": "archived"})
+    
+    for doc in archived_docs:
+        for community in doc["community_data"]["communities"]:
+            permanent_id = generate_permanent_id(community["community_id"])
+            
+            # Move price history to archive
+            price_doc = await price_history_permanent_collection.find_one({"permanent_property_id": permanent_id})
+            if price_doc:
+                price_doc["archived_at"] = datetime.now()
+                price_doc["archive_reason"] = "community archived"
+                
+                await price_history_permanent_archived_collection.insert_one(price_doc)
+                await price_history_permanent_collection.delete_one({"permanent_property_id": permanent_id})
+```
+
+**Enforcement Points:**
+- **Stage 2 Archiving**: Immediately after communities are archived
+- **Daily Price Runs**: Automatic cleanup during price tracking
+- **Atomic Operations**: Archive + delete operations are sequential
+- **Audit Trail**: Archive metadata preserved with timestamp and reason
+
+📊 **[View Detailed Architecture Diagram →](architecture/database_archiving_rule_diagram.md)**
 
 #### Data Transformation for Masterplans
 ```json

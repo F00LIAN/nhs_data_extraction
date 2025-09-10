@@ -377,10 +377,17 @@ class ListingParser:
         data_copy = data.copy()
         
         # Handle address structure - JSON-LD format uses PostalAddress
-        if "address" in data_copy and isinstance(data_copy["address"], dict):
+        # Handle both "Address" (capital) and "address" (lowercase) field names
+        address_field = None
+        if "Address" in data_copy and isinstance(data_copy["Address"], dict):
+            address_field = "Address"
+        elif "address" in data_copy and isinstance(data_copy["address"], dict):
+            address_field = "address"
+        
+        if address_field:
             # Add county to existing address object
-            data_copy["address"]["county"] = county
-        elif "address" not in data_copy:
+            data_copy[address_field]["county"] = county
+        elif "address" not in data_copy and "Address" not in data_copy:
             # Create minimal address structure with county
             data_copy["address"] = {
                 "@type": "PostalAddress",

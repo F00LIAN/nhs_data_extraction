@@ -83,7 +83,8 @@ def validate_json_ld_structure(json_ld_data: dict) -> bool:
             return False
     
     # Validate address structure
-    address = json_ld_data.get("address")
+    # Handle both "Address" (capital) and "address" (lowercase) field names
+    address = json_ld_data.get("Address") or json_ld_data.get("address")
     if not isinstance(address, dict):
         logging.warning("Missing or invalid address structure in JSON-LD")
         return False

@@ -152,6 +152,24 @@ class HTMLParser:
                     # These fields are now mandatory - use fallback if not available
                     community_data["offeredBy"] = offered_by if offered_by else "Unknown"
                     community_data["accommodationCategory"] = accommodation_category if accommodation_category else "Unknown"
+                    
+                    # Ensure address exists - use Stage 1 fallback if JSON-LD didn't provide address
+                    if not community_data.get("address"):
+                        logging.info(f"🔄 No address from JSON-LD, using Stage 1 fallback for '{community_data.get('name')}'")
+                        community_data["address"] = {
+                            "@type": "PostalAddress",
+                            "county": county,
+                            "addressLocality": address_locality,
+                            "postalCode": postal_code
+                        }
+                    else:
+                        logging.info(f"✅ Address found in JSON-LD for '{community_data.get('name')}'")
+                        
+                    # DEBUG: Verify address field exists
+                    if "address" not in community_data:
+                        logging.error(f"❌ CRITICAL: No address field after fallback logic for '{community_data.get('name')}'!")
+                    
+                    
                     extracted_info["communities"].append(community_data)
                 else:
                     # Create "Coming Soon" entry when community_id generation fails
@@ -360,19 +378,32 @@ class HTMLParser:
                     
                     if data.get("@type") == "SingleFamilyResidence":
                         # Get address and add county if available
-                        address = data.get("address", {})
+                        # Handle both "Address" (capital) and "address" (lowercase) field names
+                        address = data.get("Address") or data.get("address", {})
                         if isinstance(address, dict) and address:
                             # Add county to address if not present
                             if "county" not in address and hasattr(self, '_current_county'):
                                 address["county"] = self._current_county
+                            
+                            address_found = True
+                        else:
+                            logging.warning(f"⚠️ Empty or invalid address in SingleFamilyResidence: {address}")
+                            # Don't overwrite existing address data with empty dict
+                            address = None
                         
-                        community_data.update({
+                        # Update community data, only set address if we found valid data
+                        update_data = {
                             "name": data.get("name"),
                             "url": data.get("url"),
                             "image": data.get("image"),
-                            "address": address,
                             "build_type": self._determine_build_type(data.get("url", ""))
-                        })
+                        }
+                        
+                        # Only add address if we have valid address data
+                        if address:
+                            update_data["address"] = address
+                        
+                        community_data.update(update_data)
                     elif data.get("@type") == "Product":
                         offers = data.get("offers", {})
                         community_data.update({

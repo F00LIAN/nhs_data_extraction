@@ -61,7 +61,7 @@ class Stage2Orchestrator:
             logging.info(f"✅ Found {len(property_data)} properties to process")
             
             # Step 2: Connect to MongoDB
-            client, homepagedata_collection, communitydata_collection, temp_collection = await self.data_processor.connect_to_mongodb()
+            client, homepagedata_collection, communitydata_collection, communitydata_archived_collection, temp_collection = await self.data_processor.connect_to_mongodb()
             
             try:
                 # Step 3: Get existing community data for change detection
@@ -88,7 +88,7 @@ class Stage2Orchestrator:
                 
                 # Step 6: Handle removed listings
                 await self.data_processor.handle_removed_listings(
-                    set(existing_community_data.keys()), processed_listing_ids, communitydata_collection
+                    set(existing_community_data.keys()), processed_listing_ids, communitydata_collection, communitydata_archived_collection
                 )
                 
                 # Step 7: Capture price snapshots
@@ -151,6 +151,7 @@ class Stage2Orchestrator:
             postal_code = data.get('postalCode')
             offered_by = data.get('offeredBy')
             accommodation_category = data.get('accommodationCategory')
+            
             
             extracted_info = self.html_parser.extract_community_data(
                 html=html,

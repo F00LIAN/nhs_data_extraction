@@ -38,20 +38,27 @@ class DataFetcher:
                 "property_data.address.county": 1,
                 "property_data.address.addressLocality": 1,
                 "property_data.address.postalCode": 1,
+                "property_data.Address.county": 1,
+                "property_data.Address.addressLocality": 1,
+                "property_data.Address.postalCode": 1,
                 "property_data.offers.offeredBy": 1,
                 "property_data.accommodationCategory": 1
             })
             
             for doc in cursor:
                 if "_id" in doc and "property_data" in doc and "url" in doc["property_data"]:
+                    # Handle both "Address" (capital) and "address" (lowercase) field names
+                    property_data_obj = doc.get("property_data", {})
+                    address_data = property_data_obj.get("Address") or property_data_obj.get("address", {})
+                    
                     property_data[doc["_id"]] = {
-                        "url": doc["property_data"]["url"],
+                        "url": property_data_obj["url"],
                         "listing_id": doc.get("listing_id"),
-                        "county": doc.get("property_data", {}).get("address", {}).get("county"),
-                        "addressLocality": doc.get("property_data", {}).get("address", {}).get("addressLocality"),
-                        "postalCode": doc.get("property_data", {}).get("address", {}).get("postalCode"),
-                        "offeredBy": doc.get("property_data", {}).get("offers", {}).get("offeredBy"),
-                        "accommodationCategory": doc.get("property_data", {}).get("accommodationCategory")
+                        "county": address_data.get("county"),
+                        "addressLocality": address_data.get("addressLocality"),
+                        "postalCode": address_data.get("postalCode"),
+                        "offeredBy": property_data_obj.get("offers", {}).get("offeredBy"),
+                        "accommodationCategory": property_data_obj.get("accommodationCategory")
                     }
             
             client.close()
