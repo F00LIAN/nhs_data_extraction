@@ -23,8 +23,7 @@ class PriceTracker:
         self.homepagedata_collection = None
         self.communitydata_collection = None
         self.price_history_permanent_collection = None
-        self.price_history_permanent_archived_collection = None
-        self.archivedlistings_collection = None
+        self.price_city_snapshot_collection = None
     
     async def connect_to_mongodb(self):
         """Async MongoDB connection"""
@@ -36,8 +35,7 @@ class PriceTracker:
             self.homepagedata_collection = self.db['homepagedata']
             self.communitydata_collection = self.db['communitydata']
             self.price_history_permanent_collection = self.db['price_history_permanent']
-            self.price_history_permanent_archived_collection = self.db['price_history_permanent_archived']
-            self.archivedlistings_collection = self.db['archivedlistings']
+            self.price_city_snapshot_collection = self.db['price_city_snapshot']
             
             # Create indexes for performance
             await self._create_indexes()
@@ -56,6 +54,11 @@ class PriceTracker:
             await self.price_history_permanent_collection.create_index([("permanent_property_id", 1)])
             await self.price_history_permanent_collection.create_index([("original_listing_id", 1)])
             await self.price_history_permanent_collection.create_index([("property_snapshot.location.county", 1)])
+            
+            # City price snapshot indexes
+            await self.price_city_snapshot_collection.create_index([("city_id", 1)])
+            await self.price_city_snapshot_collection.create_index([("addressLocality", 1)])
+            await self.price_city_snapshot_collection.create_index([("county", 1)])
             
             logging.info("✅ Price tracking indexes created")
         except Exception as e:
@@ -76,8 +79,6 @@ class PriceTracker:
                 "listing_status": {"$in": ["active", "new", "updated"]}
             }).to_list(length=None)
             
-            # Also handle archived communities - move to archive collection
-            await self._handle_archived_communities()
             
             logging.info(f"📊 Processing {len(active_docs)} active community documents for daily price snapshots")
             
@@ -109,6 +110,10 @@ class PriceTracker:
             if price_snapshots:
                 await self._update_permanent_timelines(price_snapshots)
                 logging.info(f"✅ Successfully processed {len(price_snapshots)} price snapshots")
+                
+                # Create city price snapshots after updating permanent storage
+                await self._create_city_price_snapshots()
+                logging.info("✅ City price snapshots updated")
             else:
                 logging.warning("⚠️ No valid price snapshots created")
                 
@@ -140,31 +145,28 @@ class PriceTracker:
                 last_timeline_entry = permanent_record["price_timeline"][-1]
                 previous_price = last_timeline_entry.get("price", 0)
             
-            # Only create snapshot if price changed or first time
-            if current_price != previous_price or not permanent_record:
-                change_amount = current_price - previous_price
-                change_percentage = (change_amount / previous_price * 100) if previous_price > 0 else 0
-                
-                return {
-                    "listing_id": listing_id,
-                    "community_id": community_id,
-                    "property_name": community.get("name", ""),
-                    "price": current_price,
-                    "price_currency": community.get("price_currency", "USD"),
-                    "snapshot_date": datetime.now(),
-                    "scraped_at": source_doc.get("scraped_at"),
-                    "build_status": community.get("build_status", []),
-                    "build_type": community.get("build_type", ""),
-                    "change_metrics": {
-                        "previous_price": previous_price,
-                        "change_amount": change_amount,
-                        "change_percentage": round(change_percentage, 2),
-                        "is_significant": abs(change_percentage) >= 5.0
-                    },
-                    "data_source": "stage2_community",
-                }
+            # Always create daily snapshot regardless of price change
+            change_amount = current_price - previous_price
+            change_percentage = (change_amount / previous_price * 100) if previous_price > 0 else 0
             
-            return None
+            return {
+                "listing_id": listing_id,
+                "community_id": community_id,
+                "property_name": community.get("name", ""),
+                "price": current_price,
+                "price_currency": community.get("price_currency", "USD"),
+                "snapshot_date": datetime.now(),
+                "scraped_at": source_doc.get("scraped_at"),
+                "build_status": community.get("build_status", []),
+                "build_type": community.get("build_type", ""),
+                "change_metrics": {
+                    "previous_price": previous_price,
+                    "change_amount": change_amount,
+                    "change_percentage": round(change_percentage, 2),
+                    "is_significant": abs(change_percentage) >= 5.0
+                },
+                "data_source": "stage2_community",
+            }
             
         except Exception as e:
             logging.debug(f"Error creating price snapshot: {e}")
@@ -336,58 +338,309 @@ class PriceTracker:
             logging.error(f"❌ Error calculating aggregated metrics: {e}")
             return {}
     
-    async def _handle_archived_communities(self):
-        """
-        DATABASE RULE: When communitydata becomes archived -> move price_history_permanent to price_history_permanent_archived
-        """
+    async def _create_city_price_snapshots(self):
+        """Create aggregated city price snapshots from permanent storage"""
         try:
-            # Find communities with archived status
-            archived_docs = await self.communitydata_collection.find({
-                "listing_status": "archived"
-            }).to_list(length=None)
+            logging.info("🏙️ Creating city price snapshots...")
             
-            if not archived_docs:
-                logging.info("✅ No archived communities found")
-                return
+            # Get all properties (active + archived) grouped by city
+            pipeline = [
+                {
+                    "$group": {
+                        "_id": {
+                            "city": "$address.addressLocality",
+                            "county": "$address.county",
+                            "addressRegion": "$address.addressRegion"
+                        },
+                        "properties": {
+                            "$push": {
+                                "accommodation_category": "$accommodationCategory",
+                                "listing_status": "$listing_status",
+                                "current_price": "$aggregated_metrics.most_recent_price",
+                                "price_timeline": "$price_timeline"
+                            }
+                        }
+                    }
+                }
+            ]
             
-            logging.info(f"📦 ARCHIVING RULE: Moving price history for {len(archived_docs)} archived communities...")
-            archived_price_histories = 0
+            city_aggregates = await self.price_history_permanent_collection.aggregate(pipeline).to_list(length=None)
             
-            for doc in archived_docs:
-                # Get corresponding price history
-                listing_id = doc.get("listing_id")
-                if not listing_id:
-                    continue
+            for city_data in city_aggregates:
+                city_info = city_data["_id"]
+                city_id = self.generate_permanent_id(f"{city_info['city']}_{city_info['county']}_{city_info['addressRegion']}")
                 
-                # Find price history for this community's individual communities
-                communities = doc.get("community_data", {}).get("communities", [])
-                for community in communities:
-                    community_id = community.get("community_id")
-                    if community_id:
-                        permanent_id = self.generate_permanent_id(community_id)
-                        
-                        # Move price history to archived collection
-                        price_doc = await self.price_history_permanent_collection.find_one({
-                            "permanent_property_id": permanent_id
-                        })
-                        
-                        if price_doc:
-                            # Add archive metadata
-                            price_doc["archived_at"] = datetime.now()
-                            price_doc["archive_reason"] = "community archived"
-                            
-                            # Insert to archive and remove from active
-                            await self.price_history_permanent_archived_collection.insert_one(price_doc)
-                            await self.price_history_permanent_collection.delete_one({
-                                "permanent_property_id": permanent_id
-                            })
-                            archived_price_histories += 1
-                            logging.info(f"📦 ARCHIVED: {community_id} -> price_history_permanent_archived")
-            
-            logging.info(f"✅ ARCHIVING RULE ENFORCED: {archived_price_histories} price histories moved to archive")
+                # Process properties by type and status
+                properties = city_data["properties"]
+                
+                # Active properties only
+                active_properties = [p for p in properties if p["listing_status"] == "active"]
+                active_sfr = [p for p in active_properties if p["accommodation_category"] == "Single Family Residence"]
+                active_condo = [p for p in active_properties if p["accommodation_category"] == "Condominium"]
+                
+                # Calculate current active metrics
+                sfr_count = len(active_sfr)
+                condo_count = len(active_condo)
+                sfr_avg_price = sum(p["current_price"] for p in active_sfr) / len(active_sfr) if active_sfr else None
+                condo_avg_price = sum(p["current_price"] for p in active_condo) / len(active_condo) if active_condo else None
+                overall_avg_price = sum(p["current_price"] for p in active_properties) / len(active_properties) if active_properties else None
+                
+                # Calculate historical daily averages from all properties (active + archived)
+                historical_daily_averages = await self._calculate_historical_daily_averages(properties)
+                
+                # Add or update today's entry with current active metrics
+                today = datetime.now().date().isoformat()
+                today_entry = {
+                    "date": today,
+                    "sfr_avg_price": sfr_avg_price,
+                    "sfr_listing_count": sfr_count,  # Current active SFR count
+                    "condo_avg_price": condo_avg_price,
+                    "condo_listing_count": condo_count,  # Current active condo count
+                    "overall_avg_price": overall_avg_price,
+                    "overall_listing_count": len(active_properties)  # Current total active count
+                }
+                
+                # Update or append today's entry
+                today_exists = False
+                for i, entry in enumerate(historical_daily_averages):
+                    if entry.get("date") == today:
+                        historical_daily_averages[i] = today_entry
+                        today_exists = True
+                        break
+                
+                if not today_exists:
+                    historical_daily_averages.append(today_entry)
+                
+                # Sort by date and keep last 30 days
+                historical_daily_averages.sort(key=lambda x: x["date"])
+                historical_daily_averages = historical_daily_averages[-30:]
+                
+                # Calculate moving averages and percent changes
+                sfr_metrics = await self._calculate_property_metrics(active_sfr, "sfr")
+                condo_metrics = await self._calculate_property_metrics(active_condo, "condo")
+                overall_metrics = await self._calculate_property_metrics(active_properties, "overall")
+                
+                # Build city snapshot document
+                city_snapshot = {
+                    "city_id": city_id,
+                    "addressLocality": city_info["city"],
+                    "county": city_info["county"],
+                    "addressRegion": city_info["addressRegion"],
+                    "current_active_metrics": {
+                        "sfr": {
+                            "count": sfr_count,
+                            "avg_price": sfr_avg_price,
+                            "moving_averages": sfr_metrics["moving_averages"],
+                            "percent_changes": sfr_metrics["percent_changes"]
+                        },
+                        "condo": {
+                            "count": condo_count,
+                            "avg_price": condo_avg_price,
+                            "moving_averages": condo_metrics["moving_averages"],
+                            "percent_changes": condo_metrics["percent_changes"]
+                        },
+                        "overall": {
+                            "total_properties": len(active_properties),
+                            "avg_price": overall_avg_price,
+                            "moving_averages": overall_metrics["moving_averages"],
+                            "percent_changes": overall_metrics["percent_changes"]
+                        }
+                    },
+                    "historical_daily_averages": historical_daily_averages,
+                    "last_snapshot_date": datetime.now(),
+                    "created_at": datetime.now()
+                }
+                
+                # Upsert city snapshot
+                await self.price_city_snapshot_collection.update_one(
+                    {"city_id": city_id},
+                    {"$set": city_snapshot},
+                    upsert=True
+                )
+                
+            logging.info(f"✅ Created {len(city_aggregates)} city price snapshots")
             
         except Exception as e:
-            logging.error(f"❌ Error handling archived communities: {e}")
+            logging.error(f"❌ Error creating city price snapshots: {e}")
+    
+    async def _calculate_historical_daily_averages(self, properties: List[Dict]) -> List[Dict]:
+        """Calculate daily average prices and active listing counts from all properties' timelines"""
+        try:
+            daily_data = {}
+            
+            # First, determine all unique dates across all timelines
+            all_dates = set()
+            for prop in properties:
+                timeline = prop.get("price_timeline", [])
+                for entry in timeline:
+                    date = entry.get("date")
+                    if date:
+                        if hasattr(date, 'date'):
+                            date_str = date.date().isoformat()
+                        elif isinstance(date, str):
+                            date_str = date[:10]
+                        else:
+                            continue
+                        all_dates.add(date_str)
+            
+            # For each date, find all properties that were active (had a price entry on or before that date)
+            for date_str in all_dates:
+                target_date = datetime.fromisoformat(date_str).date()
+                
+                daily_data[date_str] = {
+                    "sfr": {"prices": [], "properties": set()}, 
+                    "condo": {"prices": [], "properties": set()}, 
+                    "all": {"prices": [], "properties": set()}
+                }
+                
+                for prop in properties:
+                    timeline = prop.get("price_timeline", [])
+                    prop_type = prop.get("accommodation_category", "")
+                    prop_id = prop.get("permanent_property_id") or prop.get("community_id", "")
+                    
+                    # Find the most recent price entry for this property on or before target_date
+                    valid_entries = []
+                    for entry in timeline:
+                        entry_date = entry.get("date")
+                        if entry_date:
+                            if hasattr(entry_date, 'date'):
+                                entry_date_obj = entry_date.date()
+                            elif isinstance(entry_date, str):
+                                try:
+                                    entry_date_obj = datetime.fromisoformat(entry_date[:10]).date()
+                                except:
+                                    continue
+                            else:
+                                continue
+                            
+                            # Only include entries on or before target date
+                            if entry_date_obj <= target_date:
+                                valid_entries.append((entry_date_obj, entry.get("price")))
+                    
+                    # If property has any valid entries, it was active on this date
+                    if valid_entries:
+                        # Get the most recent price (latest date)
+                        valid_entries.sort(key=lambda x: x[0], reverse=True)
+                        latest_price = valid_entries[0][1]
+                        
+                        if latest_price:
+                            # Add to daily data
+                            daily_data[date_str]["all"]["prices"].append(latest_price)
+                            daily_data[date_str]["all"]["properties"].add(prop_id)
+                            
+                            if prop_type == "Single Family Residence":
+                                daily_data[date_str]["sfr"]["prices"].append(latest_price)
+                                daily_data[date_str]["sfr"]["properties"].add(prop_id)
+                            elif prop_type == "Condominium":
+                                daily_data[date_str]["condo"]["prices"].append(latest_price)
+                                daily_data[date_str]["condo"]["properties"].add(prop_id)
+            
+            # Calculate daily averages with accurate listing counts
+            daily_averages = []
+            for date_str in sorted(daily_data.keys()):
+                day_data = daily_data[date_str]
+                
+                sfr_prices = day_data["sfr"]["prices"]
+                condo_prices = day_data["condo"]["prices"]
+                all_prices = day_data["all"]["prices"]
+                
+                daily_averages.append({
+                    "date": date_str,
+                    "sfr_avg_price": round(sum(sfr_prices) / len(sfr_prices), 2) if sfr_prices else None,
+                    "sfr_listing_count": len(day_data["sfr"]["properties"]),
+                    "condo_avg_price": round(sum(condo_prices) / len(condo_prices), 2) if condo_prices else None,
+                    "condo_listing_count": len(day_data["condo"]["properties"]),
+                    "overall_avg_price": round(sum(all_prices) / len(all_prices), 2) if all_prices else None,
+                    "overall_listing_count": len(day_data["all"]["properties"])
+                })
+            
+            return daily_averages[-30:]  # Return last 30 days
+            
+        except Exception as e:
+            logging.error(f"❌ Error calculating historical daily averages: {e}")
+            return []
+    
+    async def _calculate_property_metrics(self, properties: List[Dict], property_type: str) -> Dict:
+        """Calculate moving averages and percent changes for property type"""
+        try:
+            if not properties:
+                return {
+                    "moving_averages": {
+                        "7_day_average": None,
+                        "30_day_average": None,
+                        "90_day_average": None
+                    },
+                    "percent_changes": {
+                        "1_day_change": None,
+                        "7_day_change": None,
+                        "30_day_change": None,
+                        "90_day_change": None
+                    }
+                }
+            
+            # Collect all timeline prices for this property type
+            all_prices = []
+            for prop in properties:
+                timeline = prop.get("price_timeline", [])
+                for entry in timeline:
+                    date = entry.get("date")
+                    price = entry.get("price")
+                    if date and price:
+                        if hasattr(date, 'date'):
+                            date_obj = date
+                        else:
+                            date_obj = datetime.fromisoformat(str(date).replace('Z', '+00:00'))
+                        all_prices.append((date_obj, price))
+            
+            # Sort by date
+            all_prices.sort(key=lambda x: x[0])
+            
+            if not all_prices:
+                return {
+                    "moving_averages": {"7_day_average": None, "30_day_average": None, "90_day_average": None},
+                    "percent_changes": {"1_day_change": None, "7_day_change": None, "30_day_change": None, "90_day_change": None}
+                }
+            
+            # Calculate moving averages
+            current_date = datetime.now()
+            moving_averages = {}
+            percent_changes = {}
+            
+            for days in [7, 30, 90]:
+                cutoff_date = current_date - timedelta(days=days)
+                recent_prices = [price for date, price in all_prices if date >= cutoff_date]
+                
+                if recent_prices:
+                    avg = sum(recent_prices) / len(recent_prices)
+                    moving_averages[f"{days}_day_average"] = round(avg, 2)
+                else:
+                    moving_averages[f"{days}_day_average"] = None
+            
+            # Calculate percent changes
+            current_avg = sum(p["current_price"] for p in properties) / len(properties)
+            
+            for days in [1, 7, 30, 90]:
+                cutoff_date = current_date - timedelta(days=days)
+                past_prices = [price for date, price in all_prices if date >= cutoff_date - timedelta(days=1) and date < cutoff_date]
+                
+                if past_prices:
+                    past_avg = sum(past_prices) / len(past_prices)
+                    change = ((current_avg - past_avg) / past_avg * 100) if past_avg > 0 else 0
+                    percent_changes[f"{days}_day_change"] = round(change, 2)
+                else:
+                    percent_changes[f"{days}_day_change"] = None
+            
+            return {
+                "moving_averages": moving_averages,
+                "percent_changes": percent_changes
+            }
+            
+        except Exception as e:
+            logging.error(f"❌ Error calculating property metrics for {property_type}: {e}")
+            return {
+                "moving_averages": {"7_day_average": None, "30_day_average": None, "90_day_average": None},
+                "percent_changes": {"1_day_change": None, "7_day_change": None, "30_day_change": None, "90_day_change": None}
+            }
     
     def _extract_county_from_address(self, address: Dict) -> str:
         """Extract county from address data"""
@@ -416,14 +669,7 @@ class PriceTracker:
                 logging.warning(f"⚠️ No permanent price history found for {listing_id}")
                 return
             
-            # Get archived property metadata
-            archived_property = await self.archivedlistings_collection.find_one(
-                {"listing_id": listing_id}
-            )
-            
-            if not archived_property:
-                logging.error(f"❌ No archived property found for {listing_id}")
-                return
+            # Note: Legacy archival lookup removed - price history preserved permanently
             
             # Update permanent storage to mark as archived
             for record in permanent_records:
@@ -433,7 +679,7 @@ class PriceTracker:
                         "property_snapshot.status": "archived",
                         "archive_metadata": {
                             "archived_at": datetime.now(),
-                            "archive_reason": archived_property.get("archive_reason", "unknown")
+                            "archive_reason": "property archived"
                         },
                         "last_updated": datetime.now()
                     }}
@@ -476,21 +722,54 @@ class PriceTracker:
                 
         except Exception as e:
             logging.error(f"❌ Error archiving community data for {listing_id}: {e}")
+
+    async def update_archived_community_status(self, listing_id: str):
+        """Update listing_status to archived in price_history_permanent when community is archived"""
+        try:
+            # Get the archived community data to find individual community_ids
+            archived_doc = await self.db['communitydata_archived'].find_one({"listing_id": listing_id})
+            
+            if not archived_doc:
+                logging.warning(f"⚠️ No archived community data found for {listing_id}")
+                return
+            
+            communities = archived_doc.get("community_data", {}).get("communities", [])
+            updated_count = 0
+            
+            for community in communities:
+                community_id = community.get("community_id")
+                if community_id:
+                    permanent_id = self.generate_permanent_id(community_id)
+                    
+                    # Update listing_status to archived in price_history_permanent
+                    result = await self.price_history_permanent_collection.update_one(
+                        {"permanent_property_id": permanent_id},
+                        {"$set": {
+                            "listing_status": "archived",
+                            "archived_at": datetime.now(),
+                            "last_updated": datetime.now()
+                        }}
+                    )
+                    
+                    if result.modified_count > 0:
+                        updated_count += 1
+                        logging.info(f"✅ Updated price history status to archived for {community_id}")
+            
+            logging.info(f"✅ Updated {updated_count} price history records to archived status for {listing_id}")
+            
+        except Exception as e:
+            logging.error(f"❌ Error updating archived community status for {listing_id}: {e}")
     
     async def cleanup_old_price_history(self, days_to_keep: int = 365):
         """Clean up old price history records (keep permanent storage)"""
         try:
             cutoff_date = datetime.now() - timedelta(days=days_to_keep)
             
-            # Clean up old archived permanent records (optional - could keep for historical analysis)
-            result = await self.price_history_permanent_collection.delete_many({
-                "archive_metadata.archived_at": {"$lt": cutoff_date}
-            })
-            
-            logging.info(f"🧹 Cleaned up {result.deleted_count} old archived permanent records")
+            # Note: Price history is kept permanently, no cleanup needed
+            logging.info("ℹ️ Price history cleanup skipped - permanent storage maintained")
             
         except Exception as e:
-            logging.error(f"❌ Error cleaning up price history: {e}")
+            logging.error(f"❌ Error in cleanup_old_price_history: {e}")
     
     def close_connection(self):
         """Close MongoDB connection"""

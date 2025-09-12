@@ -1,0 +1,52 @@
+2025-09-12 12:40:34,450 - INFO - 🚀 Starting NewHomeSource scraping session
+2025-09-12 12:40:34,450 - INFO - 🌐 Browser impersonation: chrome
+2025-09-12 12:40:34,450 - INFO - 📊 Total URLs to process: 18
+2025-09-12 12:40:35,406 - INFO - 📊 Found 209 existing listings in database
+2025-09-12 12:40:35,406 - INFO - 🔍 Processing 1/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1 (using chrome)
+2025-09-12 12:40:49,314 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1
+2025-09-12 12:40:54,322 - INFO - 🔍 Processing 2/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-2 (using safari)
+2025-09-12 12:41:05,913 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-2
+2025-09-12 12:41:10,922 - INFO - 🔍 Processing 3/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-3 (using firefox)
+2025-09-12 12:41:21,979 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-3
+2025-09-12 12:41:26,986 - INFO - 🔍 Processing 4/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-4 (using chrome_android)
+2025-09-12 12:41:38,199 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-4
+2025-09-12 12:41:43,202 - INFO - 🔍 Processing 5/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-5 (using safari_ios)
+2025-09-12 12:41:54,134 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-5
+2025-09-12 12:41:59,144 - INFO - 🔍 Processing 6/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-6 (using chrome)
+2025-09-12 12:42:13,347 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-6
+2025-09-12 12:42:18,360 - INFO - 🔍 Processing 7/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-7 (using safari)
+2025-09-12 12:42:29,787 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-7
+2025-09-12 12:42:34,796 - INFO - 🔍 Processing 8/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-8 (using firefox)
+2025-09-12 12:42:45,726 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-8
+2025-09-12 12:42:50,712 - INFO - 🔍 Processing 9/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-9 (using chrome_android)
+2025-09-12 12:43:01,745 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-9
+2025-09-12 12:43:06,758 - INFO - 🔍 Processing 10/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-1 (using safari_ios)
+2025-09-12 12:43:21,722 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-1
+2025-09-12 12:43:26,735 - INFO - 🔍 Processing 11/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-2 (using chrome)
+2025-09-12 12:43:41,256 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-2
+2025-09-12 12:43:46,263 - INFO - 🔍 Processing 12/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-3 (using safari)
+2025-09-12 12:44:07,001 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-3
+2025-09-12 12:44:12,012 - INFO - 🔍 Processing 13/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-4 (using firefox)
+2025-09-12 12:44:29,109 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-4
+2025-09-12 12:44:34,115 - INFO - 🔍 Processing 14/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-5 (using chrome_android)
+2025-09-12 12:44:49,440 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-5
+2025-09-12 12:44:54,443 - INFO - 🔍 Processing 15/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-6 (using safari_ios)
+2025-09-12 12:45:13,138 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-6
+2025-09-12 12:45:18,143 - INFO - 🔍 Processing 16/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-7 (using chrome)
+2025-09-12 12:45:32,614 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-7
+2025-09-12 12:45:37,627 - INFO - 🔍 Processing 17/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-8 (using safari)
+2025-09-12 12:45:51,311 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-8
+2025-09-12 12:45:56,318 - INFO - 🔍 Processing 18/18: https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-9 (using firefox)
+2025-09-12 12:46:15,266 - INFO - ✅ Successfully processed https://www.newhomesource.com/communities/ca/riverside-san-bernardino-area/riverside-county/page-9
+2025-09-12 12:46:15,267 - INFO - 🔄 Processing retry queue...
+2025-09-12 12:46:15,267 - INFO - 🔄 Processing failure queue with persistent retry...
+2025-09-12 12:46:15,267 - INFO - ✅ No missing listings detected
+2025-09-12 12:46:15,267 - INFO - 📊 SESSION COMPLETE:
+2025-09-12 12:46:15,268 - INFO -    ✅ Successful: 18
+2025-09-12 12:46:15,268 - INFO -    ❌ Errors: 0
+2025-09-12 12:46:15,268 - INFO -    ❌ Failed URLs: 0
+2025-09-12 12:46:15,268 - INFO -    📦 Archived: 0
+2025-09-12 12:46:15,268 - INFO -    🔍 Total scraped listings: 209
+2025-09-12 12:46:15,268 - INFO - 🎯 Session status: SUCCESS
+2025-09-12 12:46:15,343 - INFO - 🧹 Cleanup complete
+2025-09-12 12:46:15,414 - INFO - 🔌 Database connection closed

@@ -37,11 +37,12 @@ class DataProcessor:
         try:
             client = AsyncIOMotorClient(self.uri)
             db = client['newhomesource']
+            db_archived = client['archived']
             return (
                 client,
                 db['homepagedata'],
                 db['communitydata'],
-                db['communitydata_archived'],
+                db_archived['communitydata_archived'],
                 db['temphtml']
             )
         except Exception as e:
@@ -312,35 +313,22 @@ class DataProcessor:
                     await communitydata_collection.delete_one({"listing_id": listing_id})
                     
                     logging.info(f"📦 Moved {listing_id} to communitydata_archived")
+                    
+                    # Update price history status to archived
+                    logging.info(f"💰 Updating price history status to archived for {listing_id}")
+                    from ..shared.price_tracker import PriceTracker
+                    price_tracker = PriceTracker()
+                    await price_tracker.connect_to_mongodb()
+                    await price_tracker.update_archived_community_status(listing_id)
+                    price_tracker.close_connection()
+                    logging.info(f"✅ Price history archival completed for {listing_id}")
             
-            # Trigger price history archiving for archived communities
-            if removed_listing_ids:
-                await self._trigger_price_history_archiving()
             
             logging.info(f"✅ Successfully archived {len(removed_listing_ids)} community listings")
             
         except Exception as e:
             logging.error(f"❌ Error handling removed community listings: {e}")
     
-    async def _trigger_price_history_archiving(self):
-        """Trigger price history archiving for newly archived communities"""
-        try:
-            logging.info("🔗 Triggering price history archiving for archived communities...")
-            
-            # Import here to avoid circular imports
-            import sys
-            import os
-            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            from shared.price_tracker import PriceTracker
-            
-            price_tracker = PriceTracker()
-            await price_tracker.connect_to_mongodb()
-            await price_tracker._handle_archived_communities()
-            price_tracker.close_connection()
-            
-            logging.info("✅ Price history archiving triggered successfully")
-        except Exception as e:
-            logging.error(f"❌ Error triggering price history archiving: {e}")
     
     async def capture_price_snapshots(self):
         """
@@ -352,6 +340,7 @@ class DataProcessor:
         """
         try:
             logging.info("💰 Starting Stage 2 price snapshot capture...")
+            logging.info("🏠 Price tracking processes ALL active communities (not just today's updates)")
             
             # Import here to avoid circular imports
             import sys
@@ -361,10 +350,18 @@ class DataProcessor:
             
             price_tracker = PriceTracker()
             await price_tracker.connect_to_mongodb()
+            
+            # Log before processing
+            logging.info("📊 Beginning comprehensive price snapshot capture:")
+            logging.info("   • Individual property timelines → price_history_permanent")
+            logging.info("   • City-level aggregations → price_city_snapshot") 
+            logging.info("   • Moving averages & percent changes calculated")
+            
             await price_tracker.capture_price_snapshots_from_stage2()
             price_tracker.close_connection()
             
             logging.info("✅ Stage 2 price tracking completed successfully")
+            logging.info("💾 Price data consolidated and city snapshots updated")
         except Exception as e:
             logging.error(f"❌ Error capturing price snapshots: {e}")
             # Don't fail the entire Stage 2 process if price tracking fails

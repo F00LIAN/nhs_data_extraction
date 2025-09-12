@@ -229,7 +229,7 @@
   "last_updated": {
     "$date": "2025-08-25T22:00:00.596Z"
   },
-  "listing_status": "active",
+  "listing_status": "archived",
   "scraped_at": "2025-08-29T02:41:29.092106",
   "total_communities_found": 9
 }

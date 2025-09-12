@@ -31,7 +31,7 @@ class DatabaseManager:
         self.db = None
         self.homepagedata_collection = None
         self.temp_collection = None
-        self.archivedlistings_collection = None
+        self.homepagedata_archived_collection = None
 
     async def connect(self) -> bool:
         """
@@ -45,7 +45,7 @@ class DatabaseManager:
             self.db = self.client['newhomesource']
             self.homepagedata_collection = self.db['homepagedata']
             self.temp_collection = self.db['temphtml']
-            self.archivedlistings_collection = self.db['archivedlistings']
+            self.homepagedata_archived_collection = self.db['homepagedata_archived']
 
             await self.client.admin.command('ping')
             logging.info("✅ MongoDB connected successfully")
@@ -154,7 +154,7 @@ class DatabaseManager:
                     listing["archive_reason"] = "missing from current scrape"
                     listing["original_scraped_at"] = listing.get("scraped_at")
                     
-                    await self.archivedlistings_collection.insert_one(listing)
+                    await self.homepagedata_archived_collection.insert_one(listing)
                     await self.homepagedata_collection.delete_one({"listing_id": listing_id})
                     
                     archived_count += 1

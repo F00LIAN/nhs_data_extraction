@@ -109,7 +109,7 @@ class NewHomeSourceExtractor:
                 print("\n🎉 Stage 1 completed successfully!")
                 print("📊 Check your MongoDB collections:")
                 print("   - homepagedata: New and updated listings")
-                print("   - archivedlistings: Removed listings")
+                print("   - homepagedata_archived: Removed listings")
                 print("   - temphtml: Temporary processing data")
             else:
                 print("\n⚠️ Stage 1 completed with issues. Check the log file for details.")
@@ -160,8 +160,8 @@ class NewHomeSourceExtractor:
                 print("✅ Community data and price snapshots captured")
                 print("📊 Check your MongoDB collections:")
                 print("   - communitydata: Detailed community information")
-                print("   - pricehistory: Price snapshots from today's scrape")
-                print("   - price_history_permanent: Long-term price trends")
+                print("   - price_history_permanent: Long-term price trends with daily snapshots")
+                print("   - price_city_snapshot: City-level aggregated price data")
                 print(f"\n📈 Processing Statistics:")
                 stats = result.get("stats", {})
                 for key, value in stats.items():
@@ -227,9 +227,11 @@ async def run_extraction(stage="full", max_concurrent=10, browser_impersonation=
         return await extractor.run_stage1_extraction()
     elif stage == '2':
         print("🎯 Running Stage 2 only (community extraction)")
+        logging.info("💰 Price tracking: Will execute after Stage 2 completion")
         return await extractor.run_stage2_extraction()
     else:  # stage == 'full'
         print("🎯 Running full extraction (Stage 1 + Stage 2 + Price Tracking)")
+        logging.info("💰 Price tracking system: ACTIVE")
         return await extractor.run_full_extraction()
 
 def main():

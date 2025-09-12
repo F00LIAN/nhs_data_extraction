@@ -1,0 +1,213 @@
+{
+  "_id": {
+    "$oid": "68c44cd69e406be699115b56"
+  },
+  "city_id": "eb451b132e551be61c03c572f57fd5aa",
+  "addressLocality": "Eastvale",
+  "aggregated_metrics": {
+    "average_price": 631451.7948717949,
+    "min_price": 399990,
+    "max_price": 769990,
+    "total_number_of_properties": 39,
+    "property_types": [
+      "Single Family Residence"
+    ],
+    "single_family_residence_moving_averages": {
+      "1_day_average": 631451.7948717949,
+      "7_day_average": 631451.7948717949,
+      "30_day_average": 631451.7948717949,
+      "90_day_average": 631451.7948717949,
+      "180_day_average": 631451.7948717949,
+      "365_day_average": 631451.7948717949
+    },
+    "single_family_residence_percent_change_metrics": {
+      "1_day_change": 0,
+      "7_day_change": 0,
+      "30_day_change": 0,
+      "90_day_change": 0,
+      "180_day_change": 0,
+      "365_day_change": 0
+    },
+    "condominium_moving_averages": {
+      "1_day_average": 0,
+      "7_day_average": 0,
+      "30_day_average": 0,
+      "90_day_average": 0,
+      "180_day_average": 0,
+      "365_day_average": 0
+    },
+    "condominium_percent_change_metrics": {
+      "1_day_change": 0,
+      "7_day_change": 0,
+      "30_day_change": 0,
+      "90_day_change": 0,
+      "180_day_change": 0,
+      "365_day_change": 0
+    },
+    "all_moving_averages": {
+      "1_day_average": 631451.7948717949,
+      "7_day_average": 631451.7948717949,
+      "30_day_average": 631451.7948717949,
+      "90_day_average": 631451.7948717949,
+      "180_day_average": 631451.7948717949,
+      "365_day_average": 631451.7948717949
+    },
+    "all_percent_change_metrics": {
+      "1_day_change": 0,
+      "7_day_change": 0,
+      "30_day_change": 0,
+      "90_day_change": 0,
+      "180_day_change": 0,
+      "365_day_change": 0
+    }
+  },
+  "county": "Riverside County",
+  "created_at": {
+    "$date": "2025-09-12T10:14:32.079Z"
+  },
+  "last_snapshot_date": {
+    "$date": "2025-09-12T12:13:28.030Z"
+  },
+  "postalCode": "92880",
+  "current_active_metrics": {
+    "sfr": {
+      "count": 39,
+      "avg_price": 631451.7948717949,
+      "moving_averages": {
+        "1_day_average": 634200.79,
+        "7_day_average": 631766.12,
+        "14_day_average": 631766.12,
+        "30_day_average": 631766.12,
+        "60_day_average": 631766.12,
+        "90_day_average": 631766.12,
+        "180_day_average": 631766.12,
+        "365_day_average": 631766.12
+      },
+      "percent_changes": {
+        "1_day_change": 0.44,
+        "7_day_change": null,
+        "14_day_change": null,
+        "30_day_change": null,
+        "60_day_change": null,
+        "90_day_change": null,
+        "180_day_change": null,
+        "365_day_change": null
+      },
+      "weekly_trends": {
+        "1_week_change": -0.05,
+        "2_week_change": -0.05,
+        "4_week_change": -0.05,
+        "8_week_change": -0.05,
+        "12_week_change": -0.05
+      },
+      "monthly_trends": {
+        "1_month_change": -0.05,
+        "3_month_change": -0.05,
+        "6_month_change": -0.05,
+        "12_month_change": -0.05
+      },
+      "yearly_trends": {
+        "1_year_change": -0.05,
+        "2_year_change": -0.05,
+        "3_year_change": -0.05
+      }
+    },
+    "condo": {
+      "count": 0,
+      "avg_price": null,
+      "moving_averages": {
+        "1_day_average": null,
+        "7_day_average": null,
+        "14_day_average": null,
+        "30_day_average": null,
+        "60_day_average": null,
+        "90_day_average": null,
+        "180_day_average": null,
+        "365_day_average": null
+      },
+      "percent_changes": {
+        "1_day_change": null,
+        "7_day_change": null,
+        "14_day_change": null,
+        "30_day_change": null,
+        "60_day_change": null,
+        "90_day_change": null,
+        "180_day_change": null,
+        "365_day_change": null
+      },
+      "weekly_trends": {},
+      "monthly_trends": {},
+      "yearly_trends": {}
+    },
+    "overall": {
+      "total_properties": 39,
+      "avg_price": 631451.7948717949,
+      "moving_averages": {
+        "1_day_average": 634200.79,
+        "7_day_average": 631766.12,
+        "14_day_average": 631766.12,
+        "30_day_average": 631766.12,
+        "60_day_average": 631766.12,
+        "90_day_average": 631766.12,
+        "180_day_average": 631766.12,
+        "365_day_average": 631766.12
+      },
+      "percent_changes": {
+        "1_day_change": 0.44,
+        "7_day_change": null,
+        "14_day_change": null,
+        "30_day_change": null,
+        "60_day_change": null,
+        "90_day_change": null,
+        "180_day_change": null,
+        "365_day_change": null
+      },
+      "weekly_trends": {
+        "1_week_change": -0.05,
+        "2_week_change": -0.05,
+        "4_week_change": -0.05,
+        "8_week_change": -0.05,
+        "12_week_change": -0.05
+      },
+      "monthly_trends": {
+        "1_month_change": -0.05,
+        "3_month_change": -0.05,
+        "6_month_change": -0.05,
+        "12_month_change": -0.05
+      },
+      "yearly_trends": {
+        "1_year_change": -0.05,
+        "2_year_change": -0.05,
+        "3_year_change": -0.05
+      }
+    }
+  },
+  "historical_daily_averages": [
+    {
+      "date": "2025-09-09",
+      "sfr_avg_price": 632542.89,
+      "condo_avg_price": null,
+      "overall_avg_price": 632542.89
+    },
+    {
+      "date": "2025-09-10",
+      "sfr_avg_price": 632542.89,
+      "condo_avg_price": null,
+      "overall_avg_price": 632542.89
+    },
+    {
+      "date": "2025-09-11",
+      "sfr_avg_price": 631451.79,
+      "condo_avg_price": null,
+      "overall_avg_price": 631451.79
+    },
+    {
+      "date": "2025-09-12",
+      "sfr_avg_price": 584990,
+      "condo_avg_price": null,
+      "overall_avg_price": 584990
+    }
+  ],
+  "updated_with_enhanced_views": true,
+  "version": "2.0"
+}

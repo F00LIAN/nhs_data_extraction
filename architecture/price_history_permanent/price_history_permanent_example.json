@@ -60,6 +60,38 @@
           "build_type": "plan",
           "change_percentage": 0
         }
+      },
+      {
+        "date": {
+          "$date": "2025-09-10T15:52:00.963Z" september 10th
+        },
+        "price": 1360919, september 10th price
+        "currency": "USD",
+        "source": "stage2",
+        "change_type": "increase",
+        "context": {
+          "build_status": [
+            "Ready to build"
+          ],
+          "build_type": "plan",
+          "change_percentage": 0
+        }
+      },
+      {
+        "date": {
+          "$date": "2025-09-11T15:52:00.963Z" september 11th
+        },
+        "price": 1360919, september 11th price
+        "currency": "USD",
+        "source": "stage2",
+        "change_type": "increase",
+        "context": {
+          "build_status": [
+            "Ready to build"
+          ],
+          "build_type": "plan",
+          "change_percentage": 0
+        }
       }
     ]
   }

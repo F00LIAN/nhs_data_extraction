@@ -31,9 +31,10 @@ class StageOneAndTwoCheck:
             uri = os.getenv("MONGO_DB_URI")
             self.client = AsyncIOMotorClient(uri)
             self.db = self.client['newhomesource']
+            self.db_archived = self.client['archived']
             
             self.homepagedata_collection = self.db['homepagedata']
-            self.homepagedata_archived_collection = self.db['homepagedata_archived']
+            self.homepagedata_archived_collection = self.db_archived['homepagedata_archived']
             self.masterplandata_collection = self.db['masterplandata']
             self.basiccommunitydata_collection = self.db['basiccommunitydata']
             

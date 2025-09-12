@@ -12,7 +12,7 @@ This scraper system is designed to create and maintain a comprehensive database 
 
 ## 🗄️ Database Architecture
 
-The system builds a MongoDB database with eight main collections:
+The system builds a MongoDB database with seven main collections:
 
 | Collection | Purpose | Data Source |
 |------------|---------|-------------|
@@ -22,8 +22,8 @@ The system builds a MongoDB database with eight main collections:
 | `communitydata_archived` | Archived Stage 2 listings | Stage 2 Processor |
 | `masterplandata` | Masterplan community data (separate processing) | Stage 1→2 Router |
 | `basiccommunitydata` | Basic community data (separate processing) | Stage 1→2 Router |
-| `price_history_permanent` | Long-term price trend analysis | Price Tracker |
-| `price_history_permanent_archived` | Archived price histories | Price Tracker |
+| `price_history_permanent` | Long-term price trend analysis with daily snapshots | Price Tracker |
+| `price_city_snapshot` | City-level aggregated price data | Price Tracker |
 
 ## 🏗️ System Architecture
 
@@ -131,7 +131,7 @@ python run_nhs.py --max-concurrent 15 --browser chrome
 
 ### Output Collections
 - **`homepagedata`**: All discovered properties with basic info
-- **`archivedlistings`**: Properties no longer available
+- **`homepagedata_archived`**: Properties no longer available
 
 ## 📊 Stage 2 - Community Details Extraction
 
@@ -263,57 +263,11 @@ for listing_id in removed_listing_ids:
     await communitydata_collection.delete_one({"listing_id": listing_id})
 ```
 
-**Price History Archiving:**
-```python
-# When communities are archived, move price history too
-price_doc["archived_at"] = datetime.now()
-price_doc["archive_reason"] = "community archived"
-
-await price_history_permanent_archived_collection.insert_one(price_doc)
-await price_history_permanent_collection.delete_one({"permanent_property_id": id})
-```
-
 **Archive Features:**
 - **Automatic Detection**: Missing listings identified daily
 - **Safe Archiving**: >50% removal rate triggers safety check
 - **Metadata Preservation**: Archive reason and timestamp recorded
-- **Price History Sync**: Related price data archived together
-
-#### Database Archiving Rule Enforcement
-
-**CRITICAL RULE**: When `communitydata.listing_status = "archived"` → **AUTOMATICALLY** archive related `price_history_permanent` records
-
-**Implementation:**
-```python
-# Triggered in two scenarios:
-# 1. Immediately after Stage 2 community archiving
-# 2. During daily price tracking runs
-
-async def _handle_archived_communities(self):
-    """DATABASE RULE: communitydata archived -> price_history_permanent archived"""
-    
-    # Find all archived communities
-    archived_docs = await communitydata_collection.find({"listing_status": "archived"})
-    
-    for doc in archived_docs:
-        for community in doc["community_data"]["communities"]:
-            permanent_id = generate_permanent_id(community["community_id"])
-            
-            # Move price history to archive
-            price_doc = await price_history_permanent_collection.find_one({"permanent_property_id": permanent_id})
-            if price_doc:
-                price_doc["archived_at"] = datetime.now()
-                price_doc["archive_reason"] = "community archived"
-                
-                await price_history_permanent_archived_collection.insert_one(price_doc)
-                await price_history_permanent_collection.delete_one({"permanent_property_id": permanent_id})
-```
-
-**Enforcement Points:**
-- **Stage 2 Archiving**: Immediately after communities are archived
-- **Daily Price Runs**: Automatic cleanup during price tracking
-- **Atomic Operations**: Archive + delete operations are sequential
-- **Audit Trail**: Archive metadata preserved with timestamp and reason
+- **Price History Preservation**: Price data remains in permanent collection for historical analysis
 
 📊 **[View Detailed Architecture Diagram →](architecture/database_archiving_rule_diagram.md)**
 
@@ -368,21 +322,29 @@ The routing happens automatically during full extraction:
 
 ## 💰 Shared - Price Tracking System
 
-**Goal**: Monitor and analyze price changes over time through permanent storage
+**Goal**: Monitor and analyze price changes over time through permanent storage and city-level aggregation
 
 ### Price Tracking Architecture
 
-The system uses a **single collection** for price data management:
+The system uses **two collections** for comprehensive price data management:
 
-#### 🏛️ `price_history_permanent` Collection - Long-term Analytics
-**Purpose**: Permanent storage of complete property price histories **with running price ledger**
+#### 🏛️ `price_history_permanent` Collection - Individual Community Tracking
+**Purpose**: Permanent storage of complete property price histories **with daily price ledger**
 - **Data Type**: Consolidated property timelines with metadata
 - **Lifecycle**: Created when property first seen → Preserved forever
 - **Storage Pattern**: One document per unique community (by community_id)
 - **Retention**: Permanent (never deleted)
-- **Running Ledger**: **YES** - Every price change is appended to `price_timeline` array using `$push`
+- **Daily Snapshots**: **YES** - Every daily price is captured regardless of change using `$push`
 
-**Document Structure**:
+#### 🏙️ `price_city_snapshot` Collection - City-Level Aggregation
+**Purpose**: Aggregated city-level price data and market trends
+- **Data Type**: City-wide price metrics by property type
+- **Lifecycle**: Updated after each price tracking run
+- **Storage Pattern**: One document per unique city (by city + county)
+- **Retention**: Permanent with historical tracking
+- **Property Type Separation**: Separate metrics for Single Family Residence vs Condominium
+
+**Individual Community Document Structure** (`price_history_permanent`):
 ```json
 {
   "permanent_property_id": "md5-hash-of-community-id",
@@ -442,23 +404,84 @@ The system uses a **single collection** for price data management:
 }
 ```
 
+**City Snapshot Document Structure** (`price_city_snapshot`):
+```json
+{
+  "city_id": "md5-hash-of-city-county",
+  "addressLocality": "Ventura",
+  "county": "Ventura County",
+  "postalCode": "93004",
+  "aggregated_metrics": {
+    "average_price": 1360919,
+    "min_price": 1360919,
+    "max_price": 1360919,
+    "total_number_of_properties": 1,
+    "property_types": ["Single Family Residence", "Condominium"],
+    "single_family_residence_moving_averages": {
+      "1_day_average": 1360919,
+      "7_day_average": 1360919,
+      "30_day_average": 1360919,
+      "90_day_average": 1360919,
+      "180_day_average": 1360919,
+      "365_day_average": 1360919
+    },
+    "single_family_residence_percent_change_metrics": {
+      "1_day_change": 0,
+      "7_day_change": 0,
+      "30_day_change": 0,
+      "90_day_change": 0,
+      "180_day_change": 0,
+      "365_day_change": 0
+    },
+    "condominium_moving_averages": {
+      "1_day_average": 1360919,
+      "7_day_average": 1360919,
+      "30_day_average": 1360919,
+      "90_day_average": 1360919,
+      "180_day_average": 1360919,
+      "365_day_average": 1360919
+    },
+    "condominium_percent_change_metrics": {
+      "1_day_change": 0,
+      "7_day_change": 0,
+      "30_day_change": 0,
+      "90_day_change": 0,
+      "180_day_change": 0,
+      "365_day_change": 0
+    },
+    "all_moving_averages": {
+      "1_day_average": 1360919,
+      "7_day_average": 1360919,
+      "30_day_average": 1360919,
+      "90_day_average": 1360919,
+      "180_day_average": 1360919,
+      "365_day_average": 1360919
+    },
+    "all_percent_change_metrics": {
+      "1_day_change": 0,
+      "7_day_change": 0,
+      "30_day_change": 0,
+      "90_day_change": 0,
+      "180_day_change": 0,
+      "365_day_change": 0
+    }
+  },
+  "last_snapshot_date": "2025-09-09T15:52:00.963Z",
+  "created_at": "2025-09-09T15:52:00.963Z"
+}
+```
+
 ### Components
 
-#### `price_tracker.py` - Price Snapshot Manager
-- **Purpose**: Captures and manages price snapshots for both collections
-- **Input**: Property data from Stages 1 & 2
-- **Output**: Price history records in both collections
+#### `price_tracker.py` - Comprehensive Price Management
+- **Purpose**: Captures daily price snapshots and creates city aggregations
+- **Input**: Property data from Stage 2
+- **Output**: Individual community price timelines and city-level snapshots
 - **Key Functions**: 
-  - `capture_price_snapshots_from_stage2()` - Creates daily snapshots
-  - `consolidate_to_permanent_storage()` - Archives complete histories
-  - `_update_permanent_timelines()` - Maintains permanent records
-
-#### `price_history.py` - Legacy Price Capture (Stage 1)
-- **Purpose**: Simple price capture during Stage 1 scraping
-- **Input**: Stage 1 scraped documents
-- **Output**: Basic price snapshots
-- **Key Functions**: `save_scraped_prices()` - Direct price recording
-- **Note**: This appears to be legacy code - main price tracking happens via `price_tracker.py`
+  - `capture_price_snapshots_from_stage2()` - Creates daily snapshots for ALL communities
+  - `_create_city_price_snapshots()` - Aggregates city-level price data
+  - `_update_permanent_timelines()` - Maintains permanent community records
+  - Daily snapshots captured regardless of price changes
 
 ### Community-Level Price Tracking Architecture
 
@@ -498,20 +521,20 @@ Each property listing page contains **multiple individual communities** (homes):
 - Creates unique `community_id` for each community
 - Generates structured data with price, build status, and type
 
-**Step 2: Price Snapshot Creation** (`shared/price_tracker.py` lines 90-100):
+**Step 2: Daily Price Snapshot Creation** (`shared/price_tracker.py`):
 ```python
-for doc in today_docs:
+for doc in active_docs:  # ← All active communities, not just today's
     communities = doc.get("community_data", {}).get("communities", [])
     for community in communities:  # ← Individual community processing
         snapshot = await self._create_price_snapshot(community, listing_id, doc)
+        # Always creates snapshot regardless of price change
 ```
 
-**Step 3: Change Detection** (per community):
+**Step 3: City Aggregation** (after individual updates):
 ```python
-# Check previous price for THIS specific community
-permanent_record = await self.price_history_permanent_collection.find_one(
-    {"permanent_property_id": permanent_id}  # ← Unique community tracking
-)
+# Aggregate city-level data from permanent storage
+await self._create_city_price_snapshots()
+# Groups by city/county and separates by property type
 ```
 
 ### Execution Flow & Triggers
@@ -529,7 +552,8 @@ await price_tracker.capture_price_snapshots_from_stage2()
 ```
 ↓ Processes ↓
 - **Each community individually** from `communitydata` collection
-- **Updates timelines** in `price_history_permanent` (for each community with price changes)
+- **Updates timelines** in `price_history_permanent` (daily snapshots for ALL communities)
+- **Creates city aggregations** in `price_city_snapshot` collection
 
 **Property Archival** (Stage 1 archiving process):
 ```python
@@ -546,20 +570,13 @@ The system provides comprehensive logging optimized for GitHub Actions workflows
 **Stage 2 Price Tracking Logging**:
 ```
 💰 Starting Stage 2 price snapshot capture...
-📊 Processing 23 community documents for price snapshots
+📊 Processing 23 active community documents for daily price snapshots
 🏠 Analyzed 47 individual communities from 23 properties
-✅ Created 8 new price snapshots
-💾 Updated 8 permanent timeline entries
-✅ Stage 2 price tracking completed successfully
-```
-
-**When No Price Changes Detected**:
-```
-💰 Starting Stage 2 price snapshot capture...
-📊 Processing 23 community documents for price snapshots
-🏠 Analyzed 47 individual communities from 23 properties
-ℹ️ No price changes detected - no new snapshots created
-✅ Stage 2 price tracking completed successfully
+📈 Created 47 price snapshots for permanent storage
+✅ Successfully processed 47 price snapshots
+🏙️ Creating city price snapshots...
+✅ Created 8 city price snapshots
+✅ City price snapshots updated
 ```
 
 **GitHub Actions Recognition**:
@@ -572,28 +589,30 @@ The scraper workflow (`.github/workflows/scraper.yml`) specifically looks for th
 
 1. **Property Discovery** (Stage 1) → Basic listing data
 2. **Community Extraction** (Stage 2) → Detailed pricing captured
-3. **Permanent Timeline Update** → `price_history_permanent` updated (if price changed)
-4. **Property Archival** → Properties marked as archived in permanent storage
+3. **Daily Timeline Update** → `price_history_permanent` updated (ALL communities daily)
+4. **City Aggregation** → `price_city_snapshot` updated with city-level metrics
+5. **Property Archival** → Properties marked as archived, price history preserved
 
 ### Price Tracking Summary
 
-| Aspect | `price_history_permanent` |
-|--------|---------------------------|
-| **Purpose** | Historical preservation with running ledger |
-| **Trigger** | Community price changes only |
-| **Granularity** | Complete community timelines |
-| **Data Source** | `communitydata` collection |
-| **Running Ledger** | **YES** (via `$push` to `price_timeline`) |
-| **Tracking Level** | Individual community IDs (persistent) |
-| **Retention** | Forever |
-| **Data Volume** | Moderate (one timeline per community) |
-| **Use Case** | Long-term trend analysis |
+| Aspect | `price_history_permanent` | `price_city_snapshot` |
+|--------|---------------------------|----------------------|
+| **Purpose** | Historical preservation with daily ledger | City-level market analysis |
+| **Trigger** | Daily snapshots for ALL communities | After permanent storage updates |
+| **Granularity** | Complete community timelines | City-wide aggregated metrics |
+| **Data Source** | `communitydata` collection | `price_history_permanent` collection |
+| **Running Ledger** | **YES** (daily via `$push` to `price_timeline`) | **YES** (city aggregations) |
+| **Tracking Level** | Individual community IDs (persistent) | City + County combinations |
+| **Retention** | Forever | Forever |
+| **Data Volume** | High (daily entries per community) | Low (one record per city) |
+| **Use Case** | Individual property trend analysis | Market-wide trend analysis |
 
 ### Performance Optimizations
 
-- **Smart Change Detection**: Only creates snapshots when prices actually change
-- **Automatic Indexing**: Optimized indexes for permanent collection
-- **Archive Management**: Properties automatically marked as archived when removed
+- **Daily Snapshot Capture**: Captures ALL community prices daily for comprehensive tracking
+- **Automatic Indexing**: Optimized indexes for both permanent and city snapshot collections
+- **City-Level Aggregation**: Efficient MongoDB aggregation pipeline for city-wide metrics
+- **Archive Management**: Properties automatically marked as archived when removed, price history preserved
 - **Permanent ID System**: Properties tracked consistently across URL changes
 
 ## 🔧 Configuration
