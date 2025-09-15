@@ -14,12 +14,12 @@
       "count": 25,
       "avg_price": 983534.44,
       "moving_averages": {
-        "7_day_average": 996357.15,
-        "30_day_average": 996357.15,
-        "90_day_average": 996357.15
+        "7_day_average": 949760.98,
+        "30_day_average": 949760.98,
+        "90_day_average": 949760.98
       },
       "percent_changes": {
-        "1_day_change": -1.28,
+        "1_day_change": 4.72,
         "7_day_change": null,
         "30_day_change": null,
         "90_day_change": null
@@ -44,12 +44,12 @@
       "total_properties": 25,
       "avg_price": 983534.44,
       "moving_averages": {
-        "7_day_average": 996357.15,
-        "30_day_average": 996357.15,
-        "90_day_average": 996357.15
+        "7_day_average": 949760.98,
+        "30_day_average": 949760.98,
+        "90_day_average": 949760.98
       },
       "percent_changes": {
-        "1_day_change": -1.28,
+        "1_day_change": 4.72,
         "7_day_change": null,
         "30_day_change": null,
         "90_day_change": null
@@ -123,5 +123,10 @@
   ],
   "last_snapshot_date": {
     "$date": "2025-09-15T02:52:59.886Z"
-  }
+  },
+  "percentage_backfill_applied": true,
+  "percentage_backfill_date": {
+    "$date": "2025-09-14T20:57:58.579Z"
+  },
+  "percentage_backfill_version": "2.0"
 }
