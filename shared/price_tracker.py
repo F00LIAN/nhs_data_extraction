@@ -17,13 +17,29 @@ import hashlib
 load_dotenv()
 
 class PriceTracker:
-    def __init__(self):
+    # Configurable timeframes for future expansion
+    DEFAULT_MOVING_AVG_TIMEFRAMES = [7, 30, 90]
+    DEFAULT_PERCENT_CHANGE_TIMEFRAMES = [1, 7, 30, 90]
+    
+    # Future expansion examples (can be enabled when more data is available):
+    EXTENDED_TIMEFRAMES = [1, 3, 7, 14, 30, 60, 90, 180, 365]
+    QUARTERLY_TIMEFRAMES = [1, 7, 30, 90, 180, 270, 365]
+    
+    def __init__(self, use_extended_timeframes: bool = False):
         self.client = None
         self.db = None
         self.homepagedata_collection = None
         self.communitydata_collection = None
         self.price_history_permanent_collection = None
         self.price_city_snapshot_collection = None
+        
+        # Set timeframes based on configuration
+        if use_extended_timeframes:
+            self.moving_avg_timeframes = [t for t in self.EXTENDED_TIMEFRAMES if t > 1]
+            self.percent_change_timeframes = self.EXTENDED_TIMEFRAMES
+        else:
+            self.moving_avg_timeframes = self.DEFAULT_MOVING_AVG_TIMEFRAMES
+            self.percent_change_timeframes = self.DEFAULT_PERCENT_CHANGE_TIMEFRAMES
     
     async def connect_to_mongodb(self):
         """Async MongoDB connection"""
@@ -424,10 +440,10 @@ class PriceTracker:
                 historical_daily_averages.sort(key=lambda x: x["date"])
                 historical_daily_averages = historical_daily_averages[-30:]
                 
-                # Calculate moving averages and percent changes
-                sfr_metrics = await self._calculate_property_metrics(active_sfr, "sfr")
-                condo_metrics = await self._calculate_property_metrics(active_condo, "condo")
-                overall_metrics = await self._calculate_property_metrics(active_properties, "overall")
+                # Calculate moving averages and percent changes from city historical data
+                sfr_metrics = await self._calculate_city_metrics(historical_daily_averages, "sfr")
+                condo_metrics = await self._calculate_city_metrics(historical_daily_averages, "condo")
+                overall_metrics = await self._calculate_city_metrics(historical_daily_averages, "overall")
                 
                 # Build city snapshot document
                 city_snapshot = {
@@ -522,6 +538,139 @@ class PriceTracker:
             logging.error(f"❌ Error preserving historical listing counts: {e}")
             # Fallback to calculated historical if preservation fails
             return calculated_historical
+    
+    async def _calculate_city_metrics(self, historical_daily_averages: List[Dict], property_type: str, 
+                                     custom_timeframes: List[int] = None) -> Dict:
+        """
+        Calculate moving averages and percent changes from city historical daily averages.
+        This is the CORRECT way to calculate percentage changes for city snapshots.
+        
+        Args:
+            historical_daily_averages: List of daily price data
+            property_type: 'sfr', 'condo', or 'overall'
+            custom_timeframes: Optional list of timeframes in days (e.g., [1, 7, 14, 30, 60, 90, 180, 365])
+        """
+        try:
+            if not historical_daily_averages:
+                # Return dynamic empty structure based on timeframes
+                if custom_timeframes is None:
+                    moving_avg_timeframes = self.moving_avg_timeframes
+                    percent_change_timeframes = self.percent_change_timeframes
+                else:
+                    moving_avg_timeframes = [t for t in custom_timeframes if t > 1]
+                    percent_change_timeframes = custom_timeframes
+                
+                return {
+                    "moving_averages": {f"{days}_day_average": None for days in moving_avg_timeframes},
+                    "percent_changes": {f"{days}_day_change": None for days in percent_change_timeframes}
+                }
+            
+            # Sort by date to ensure chronological order
+            sorted_historical = sorted(historical_daily_averages, key=lambda x: x["date"])
+            
+            # Determine which price field to use based on property type
+            if property_type == "sfr":
+                price_field = "sfr_avg_price"
+            elif property_type == "condo":
+                price_field = "condo_avg_price"
+            else:  # overall
+                price_field = "overall_avg_price"
+            
+            # Extract prices with dates for this property type
+            price_data = []
+            for entry in sorted_historical:
+                price = entry.get(price_field)
+                if price is not None:
+                    price_data.append({
+                        "date": entry["date"],
+                        "price": price
+                    })
+            
+            if not price_data:
+                # Return dynamic empty structure based on timeframes  
+                if custom_timeframes is None:
+                    moving_avg_timeframes = self.moving_avg_timeframes
+                    percent_change_timeframes = self.percent_change_timeframes
+                else:
+                    moving_avg_timeframes = [t for t in custom_timeframes if t > 1]
+                    percent_change_timeframes = custom_timeframes
+                
+                return {
+                    "moving_averages": {f"{days}_day_average": None for days in moving_avg_timeframes},
+                    "percent_changes": {f"{days}_day_change": None for days in percent_change_timeframes}
+                }
+            
+            # Define timeframes - use custom if provided, otherwise use instance defaults
+            if custom_timeframes is None:
+                # Use instance timeframes (configurable per PriceTracker instance)
+                moving_avg_timeframes = self.moving_avg_timeframes
+                percent_change_timeframes = self.percent_change_timeframes
+            else:
+                # Custom timeframes allow for future expansion
+                moving_avg_timeframes = [t for t in custom_timeframes if t > 1]  # No 1-day moving average
+                percent_change_timeframes = custom_timeframes
+            
+            # Calculate moving averages
+            moving_averages = {}
+            
+            for days in moving_avg_timeframes:
+                if len(price_data) >= days:
+                    recent_prices = [entry["price"] for entry in price_data[-days:]]
+                    avg = sum(recent_prices) / len(recent_prices)
+                    moving_averages[f"{days}_day_average"] = round(avg, 2)
+                else:
+                    # Use all available data if we don't have enough days
+                    all_prices = [entry["price"] for entry in price_data]
+                    if all_prices:
+                        avg = sum(all_prices) / len(all_prices)
+                        moving_averages[f"{days}_day_average"] = round(avg, 2)
+                    else:
+                        moving_averages[f"{days}_day_average"] = None
+            
+            # Calculate percentage changes using city historical data
+            percent_changes = {}
+            current_price = price_data[-1]["price"]  # Most recent price
+            
+            # Calculate percentage changes for all specified timeframes
+            for days in percent_change_timeframes:
+                key = f"{days}_day_change"
+                
+                # Need at least (days + 1) data points to compare
+                required_points = days + 1
+                if len(price_data) >= required_points:
+                    past_price = price_data[-(days + 1)]["price"]
+                    if past_price > 0:
+                        change = ((current_price - past_price) / past_price * 100)
+                        percent_changes[key] = round(change, 2)
+                        logging.debug(f"📊 {property_type} {days}-day: ${past_price:.2f} -> ${current_price:.2f} = {change:.2f}%")
+                    else:
+                        percent_changes[key] = None
+                else:
+                    percent_changes[key] = None
+                    logging.debug(f"📊 {property_type} {days}-day: Insufficient data ({len(price_data)} points, need {required_points})")
+            
+            logging.info(f"✅ Calculated {property_type} metrics from {len(price_data)} historical data points")
+            
+            return {
+                "moving_averages": moving_averages,
+                "percent_changes": percent_changes
+            }
+            
+        except Exception as e:
+            logging.error(f"❌ Error calculating city metrics for {property_type}: {e}")
+            
+            # Return dynamic fallback structure based on timeframes
+            if custom_timeframes is None:
+                moving_avg_timeframes = self.moving_avg_timeframes
+                percent_change_timeframes = self.percent_change_timeframes
+            else:
+                moving_avg_timeframes = [t for t in custom_timeframes if t > 1]
+                percent_change_timeframes = custom_timeframes
+            
+            return {
+                "moving_averages": {f"{days}_day_average": None for days in moving_avg_timeframes},
+                "percent_changes": {f"{days}_day_change": None for days in percent_change_timeframes}
+            }
     
     async def _calculate_historical_daily_averages(self, properties: List[Dict]) -> List[Dict]:
         """Calculate daily average prices and active listing counts from all properties' timelines"""
