@@ -1,0 +1,118 @@
+{
+    "_id": {
+      "$oid": "68c49e88aff7716cdb34367e"
+    },
+    "city_id": "bea7897040873546a10db9c7e5f02b4d",
+    "addressLocality": "Corona",
+    "addressRegion": "CA",
+    "county": "Riverside County",
+    "created_at": {
+      "$date": "2025-09-13T02:43:08.021Z"
+    },
+    "current_active_metrics": {
+      "sfr": {
+        "count": 55,
+        "avg_price": 851135.8909090909,
+        "moving_averages": {
+          "7_day_average": 871857.56,
+          "30_day_average": 871857.56,
+          "90_day_average": 871857.56
+        },
+        "percent_changes": {
+          "1_day_change": -0.3,
+          "7_day_change": null,
+          "30_day_change": null,
+          "90_day_change": null
+        }
+      },
+      "condo": {
+        "count": 0,
+        "avg_price": null,
+        "moving_averages": {
+          "7_day_average": null,
+          "30_day_average": null,
+          "90_day_average": null
+        },
+        "percent_changes": {
+          "1_day_change": null,
+          "7_day_change": null,
+          "30_day_change": null,
+          "90_day_change": null
+        }
+      },
+      "overall": {
+        "total_properties": 55,
+        "avg_price": 851135.8909090909,
+        "moving_averages": {
+          "7_day_average": 871857.56,
+          "30_day_average": 871857.56,
+          "90_day_average": 871857.56
+        },
+        "percent_changes": {
+          "1_day_change": -0.3,
+          "7_day_change": null,
+          "30_day_change": null,
+          "90_day_change": null
+        }
+      }
+    },
+    "historical_daily_averages": [
+      {
+        "date": "2025-09-09",
+        "sfr_avg_price": 848573.79,
+        "sfr_listing_count": 1,
+        "condo_avg_price": null,
+        "condo_listing_count": 0,
+        "overall_avg_price": 848573.79,
+        "overall_listing_count": 1
+      },
+      {
+        "date": "2025-09-10",
+        "sfr_avg_price": 848573.79,
+        "sfr_listing_count": 45, // store from last instance
+        "condo_avg_price": null,
+        "condo_listing_count": 0,
+        "overall_avg_price": 848573.79,
+        "overall_listing_count": 1
+      },
+      {
+        "date": "2025-09-11",
+        "sfr_avg_price": 853709.13,
+        "sfr_listing_count": 47, // store from last instance
+        "condo_avg_price": null,
+        "condo_listing_count": 0,
+        "overall_avg_price": 853709.13,
+        "overall_listing_count": 1
+      },
+      {
+        "date": "2025-09-12",
+        "sfr_avg_price": 851135.89,
+        "sfr_listing_count":35, // store from last instance
+        "condo_avg_price": null,
+        "condo_listing_count": 0,
+        "overall_avg_price": 851135.89,
+        "overall_listing_count": 1
+      },
+      {
+        "date": "2025-09-13",
+        "sfr_avg_price": 851135.8909090909,
+        "sfr_listing_count": 55, // new instance today
+        "condo_avg_price": null,
+        "condo_listing_count": 1, // new instance today
+        "overall_avg_price": 851135.8909090909,
+        "overall_listing_count": 55
+      }, 
+      {
+        "date": "2025-09-14",
+        "sfr_avg_price": 851135.8909090909,
+        "sfr_listing_count": 56, // tomorrow instance ,  one new active listing
+        "condo_avg_price": null,
+        "condo_listing_count": 1, // tomorrow instance, 
+        "overall_avg_price": 851135.8909090909,
+        "overall_listing_count": 55
+      }
+    ],
+    "last_snapshot_date": {
+      "$date": "2025-09-13T02:43:08.021Z"
+    }
+  }

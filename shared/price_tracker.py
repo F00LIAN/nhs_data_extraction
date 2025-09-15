@@ -385,8 +385,17 @@ class PriceTracker:
                 condo_avg_price = sum(p["current_price"] for p in active_condo) / len(active_condo) if active_condo else None
                 overall_avg_price = sum(p["current_price"] for p in active_properties) / len(active_properties) if active_properties else None
                 
+                # Get existing historical data to preserve listing counts
+                existing_snapshot = await self.price_city_snapshot_collection.find_one({"city_id": city_id})
+                existing_historical = existing_snapshot.get("historical_daily_averages", []) if existing_snapshot else []
+                
                 # Calculate historical daily averages from all properties (active + archived)
-                historical_daily_averages = await self._calculate_historical_daily_averages(properties)
+                calculated_historical = await self._calculate_historical_daily_averages(properties)
+                
+                # Preserve historical listing counts while updating prices
+                historical_daily_averages = await self._preserve_historical_listing_counts(
+                    existing_historical, calculated_historical, city_info
+                )
                 
                 # Add or update today's entry with current active metrics
                 today = datetime.now().date().isoformat()
@@ -462,6 +471,57 @@ class PriceTracker:
             
         except Exception as e:
             logging.error(f"❌ Error creating city price snapshots: {e}")
+    
+    async def _preserve_historical_listing_counts(self, existing_historical: List[Dict], 
+                                                calculated_historical: List[Dict], 
+                                                city_info: Dict) -> List[Dict]:
+        """
+        Preserve actual listing counts from when historical snapshots were taken.
+        Only update prices, not counts for historical dates.
+        """
+        try:
+            # Create a lookup of existing counts by date
+            existing_counts_by_date = {}
+            for entry in existing_historical:
+                date = entry.get("date")
+                if date:
+                    existing_counts_by_date[date] = {
+                        "sfr_listing_count": entry.get("sfr_listing_count"),
+                        "condo_listing_count": entry.get("condo_listing_count"), 
+                        "overall_listing_count": entry.get("overall_listing_count")
+                    }
+            
+            # Merge calculated historical (prices) with preserved counts
+            preserved_historical = []
+            for calc_entry in calculated_historical:
+                date = calc_entry.get("date")
+                
+                # If we have existing counts for this date, preserve them
+                if date in existing_counts_by_date:
+                    preserved_entry = calc_entry.copy()
+                    # Preserve the original listing counts from when snapshot was taken
+                    preserved_counts = existing_counts_by_date[date]
+                    if preserved_counts["sfr_listing_count"] is not None:
+                        preserved_entry["sfr_listing_count"] = preserved_counts["sfr_listing_count"]
+                    if preserved_counts["condo_listing_count"] is not None:
+                        preserved_entry["condo_listing_count"] = preserved_counts["condo_listing_count"]
+                    if preserved_counts["overall_listing_count"] is not None:
+                        preserved_entry["overall_listing_count"] = preserved_counts["overall_listing_count"]
+                    
+                    preserved_historical.append(preserved_entry)
+                    logging.debug(f"📊 Preserved counts for {date}: SFR={preserved_counts['sfr_listing_count']}, Overall={preserved_counts['overall_listing_count']}")
+                else:
+                    # New historical date - use calculated values
+                    preserved_historical.append(calc_entry)
+                    logging.debug(f"📊 New historical date {date}: SFR={calc_entry.get('sfr_listing_count')}, Overall={calc_entry.get('overall_listing_count')}")
+            
+            logging.info(f"🔄 Preserved historical counts for {len(existing_counts_by_date)} existing dates in {city_info.get('city', 'Unknown City')}")
+            return preserved_historical
+            
+        except Exception as e:
+            logging.error(f"❌ Error preserving historical listing counts: {e}")
+            # Fallback to calculated historical if preservation fails
+            return calculated_historical
     
     async def _calculate_historical_daily_averages(self, properties: List[Dict]) -> List[Dict]:
         """Calculate daily average prices and active listing counts from all properties' timelines"""
