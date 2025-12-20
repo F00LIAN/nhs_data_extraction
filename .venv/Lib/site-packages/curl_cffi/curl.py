@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import locale
 import struct
 import sys
 import warnings
@@ -144,6 +145,8 @@ class Curl:
     Wrapper for ``curl_easy_*`` functions of libcurl.
     """
 
+    _WS_RECV_BUFFER_SIZE = 128 * 1024  # 128 kB
+
     def __init__(self, cacert: str = "", debug: bool = False, handle=None) -> None:
         """
         Parameters:
@@ -166,6 +169,12 @@ class Curl:
         self._debug = debug
         self._set_error_buffer()
 
+        # Pre-allocated CFFI objects for WebSocket performance
+        self._ws_recv_buffer = ffi.new("char[]", self._WS_RECV_BUFFER_SIZE)
+        self._ws_recv_n_recv = ffi.new("size_t *")
+        self._ws_recv_p_frame = ffi.new("struct curl_ws_frame **")
+        self._ws_send_n_sent = ffi.new("size_t *")
+
     def _set_error_buffer(self) -> None:
         ret = lib._curl_easy_setopt(self._curl, CurlOpt.ERRORBUFFER, self._error_buffer)
         if ret != 0:
@@ -182,6 +191,9 @@ class Curl:
         self.close()
 
     def _check_error(self, errcode: int, *args: Any) -> None:
+        if errcode == 0:
+            return
+
         error = self._get_error(errcode, *args)
         if error is not None:
             raise error
@@ -207,6 +219,8 @@ class Curl:
         Returns:
             0 if no error, see ``CurlECode``.
         """
+        if self._curl is None:
+            return 0  # silently ignore if curl handle is None
         input_option = {
             # this should be int in curl, but cffi requires pointer for void*
             # it will be convert back in the glue c code.
@@ -254,7 +268,34 @@ class Curl:
             lib._curl_easy_setopt(self._curl, CurlOpt.DEBUGFUNCTION, lib.debug_function)
             option = CurlOpt.DEBUGDATA
         elif value_type == "char*":
-            c_value = value.encode() if isinstance(value, str) else value
+            if isinstance(value, str):
+                # Windows/libcurl expects ANSI code page for file paths (char*).
+                # Non-ASCII paths encoded as UTF-8 can trigger ErrCode 77.
+                # Encode file-path-like options using the system encoding on Windows.
+                filepath_opts = {
+                    CurlOpt.CAINFO,
+                    CurlOpt.CAPATH,
+                    CurlOpt.PROXY_CAINFO,
+                    CurlOpt.PROXY_CAPATH,
+                    CurlOpt.SSLCERT,
+                    CurlOpt.SSLKEY,
+                    CurlOpt.CRLFILE,
+                    CurlOpt.ISSUERCERT,
+                    CurlOpt.SSH_PUBLIC_KEYFILE,
+                    CurlOpt.SSH_PRIVATE_KEYFILE,
+                    CurlOpt.COOKIEFILE,
+                    CurlOpt.COOKIEJAR,
+                    CurlOpt.NETRC_FILE,
+                    CurlOpt.UNIX_SOCKET_PATH,
+                }
+                if sys.platform.startswith("win") and option in filepath_opts:
+                    # Use the process ANSI code page to match what CRT fopen expects.
+                    enc = locale.getpreferredencoding(False)
+                    c_value = value.encode(enc, errors="strict")
+                else:
+                    c_value = value.encode()
+            else:
+                c_value = value
             # Must keep a reference, otherwise may be GCed.
             if option == CurlOpt.POSTFIELDS:
                 self._body_handle = c_value
@@ -308,18 +349,28 @@ class Curl:
             0x100000: ffi.string,
             0x200000: int,
             0x300000: float,
+            0x400000: list,
             0x500000: int,
             0x600000: int,
         }
-        c_value = ffi.new(ret_option[option & 0xF00000])
+
+        option_type = option & 0xF00000
+
+        if self._curl is None:
+            if option_type == 0x100000:
+                return b""
+            return ret_cast_option[option_type]()
+
+        c_value = ffi.new(ret_option[option_type])
         ret = lib.curl_easy_getinfo(self._curl, option, c_value)
         self._check_error(ret, "getinfo", option)
         # cookielist and ssl_engines starts with 0x400000, see also: const.py
-        if option & 0xF00000 == 0x400000:
+        if option_type == 0x400000:
             return slist_to_list(c_value[0])
         if c_value[0] == ffi.NULL:
             return b""
-        return ret_cast_option[option & 0xF00000](c_value[0])
+
+        return ret_cast_option[option_type](c_value[0])
 
     def version(self) -> bytes:
         """Get the underlying libcurl version."""
@@ -335,6 +386,8 @@ class Curl:
         Returns:
             0 if no error.
         """
+        if self._curl is None:
+            return 0  # silently ignore if curl handle is None
         return lib.curl_easy_impersonate(
             self._curl, target.encode(), int(default_headers)
         )
@@ -346,15 +399,19 @@ class Curl:
             ret = self.setopt(CurlOpt.PROXY_CAINFO, self._cacert)
             self._check_error(ret, "set proxy cacert")
 
-    def perform(self, clear_headers: bool = True) -> None:
+    def perform(self, clear_headers: bool = True, clear_resolve: bool = True) -> None:
         """Wrapper for ``curl_easy_perform``, performs a curl request.
 
         Parameters:
             clear_headers: clear header slist used in this perform
+            clear_resolve: clear resolve slist used in this perform
 
         Raises:
             CurlError: if the perform was not successful.
         """
+        if self._curl is None:
+            raise CurlError("Cannot perform request on closed handle.")
+
         # make sure we set a cacert store
         self._ensure_cacert()
 
@@ -365,18 +422,28 @@ class Curl:
             self._check_error(ret, "perform")
         finally:
             # cleaning
-            self.clean_after_perform(clear_headers)
+            self.clean_handles_and_buffers(clear_headers, clear_resolve)
 
     def upkeep(self) -> int:
+        if self._curl is None:
+            return 0  # silently ignore if curl handle is None
         return lib.curl_easy_upkeep(self._curl)
 
-    def clean_after_perform(self, clear_headers: bool = True) -> None:
-        """Clean up handles and buffers after ``perform``, called at the end of
-        ``perform``."""
+    def clean_handles_and_buffers(
+        self, clear_headers: bool = True, clear_resolve: bool = True
+    ) -> None:
+        """Clean up handles and buffers after ``perform`` and ``close``,
+        called at the end of ``perform`` and ``close``."""
         self._write_handle = None
         self._header_handle = None
         self._debug_handle = None
         self._body_handle = None
+
+        if clear_resolve:
+            if self._resolve != ffi.NULL:
+                lib.curl_slist_free_all(self._resolve)
+            self._resolve = ffi.NULL
+
         if clear_headers:
             if self._headers != ffi.NULL:
                 lib.curl_slist_free_all(self._headers)
@@ -391,6 +458,8 @@ class Curl:
 
         This is not a full copy of entire curl object in python. For example, headers
         handle is not copied, you have to set them again."""
+        if self._curl is None:
+            raise CurlError("Cannot duplicate closed handle.")
         new_handle = lib.curl_easy_duphandle(self._curl)
         c = Curl(cacert=self._cacert, debug=self._debug, handle=new_handle)
         return c
@@ -450,17 +519,19 @@ class Curl:
 
     def close(self) -> None:
         """Close and cleanup curl handle, wrapper for ``curl_easy_cleanup``."""
+        self.clean_handles_and_buffers()
+
         if self._curl:
             lib.curl_easy_cleanup(self._curl)
             self._curl = None
         ffi.release(self._error_buffer)
-        self._resolve = ffi.NULL
 
-    def ws_recv(self, n: int = 1024) -> tuple[bytes, CurlWsFrame]:
+        if self._ws_recv_buffer is not None:
+            ffi.release(self._ws_recv_buffer)
+            self._ws_recv_buffer = None
+
+    def ws_recv(self) -> tuple[bytes, CurlWsFrame]:
         """Receive a frame from a websocket connection.
-
-        Args:
-            n: maximum data to receive.
 
         Returns:
             a tuple of frame content and curl frame meta struct.
@@ -468,17 +539,20 @@ class Curl:
         Raises:
             CurlError: if failed.
         """
-        buffer = ffi.new("char[]", n)
-        n_recv = ffi.new("size_t *")
-        p_frame = ffi.new("struct curl_ws_frame **")
-
-        ret = lib.curl_ws_recv(self._curl, buffer, n, n_recv, p_frame)
+        if self._curl is None:
+            raise CurlError("Cannot receive websocket data on closed handle.")
+        ret = lib.curl_ws_recv(
+            self._curl,
+            self._ws_recv_buffer,
+            self._WS_RECV_BUFFER_SIZE,
+            self._ws_recv_n_recv,
+            self._ws_recv_p_frame,
+        )
         self._check_error(ret, "WS_RECV")
 
         # Frame meta explained: https://curl.se/libcurl/c/curl_ws_meta.html
-        frame = p_frame[0]
-
-        return ffi.buffer(buffer)[: n_recv[0]], frame
+        frame = self._ws_recv_p_frame[0]
+        return ffi.buffer(self._ws_recv_buffer)[: self._ws_recv_n_recv[0]], frame
 
     def ws_send(self, payload: bytes, flags: CurlWsFlag = CurlWsFlag.BINARY) -> int:
         """Send data to a websocket connection.
@@ -493,11 +567,15 @@ class Curl:
         Raises:
             CurlError: if failed.
         """
-        n_sent = ffi.new("size_t *")
+        if self._curl is None:
+            raise CurlError("Cannot send websocket data on closed handle.")
+
         buffer = ffi.from_buffer(payload)
-        ret = lib.curl_ws_send(self._curl, buffer, len(payload), n_sent, 0, flags)
+        ret = lib.curl_ws_send(
+            self._curl, buffer, len(payload), self._ws_send_n_sent, 0, flags
+        )
         self._check_error(ret, "WS_SEND")
-        return n_sent[0]
+        return self._ws_send_n_sent[0]
 
     def ws_close(self, code: int = 1000, message: bytes = b"") -> int:
         """Close a websocket connection. Shorthand for :meth:`ws_send`
@@ -514,7 +592,8 @@ class Curl:
         Raises:
             CurlError: if failed.
         """
-        return self.ws_send(struct.pack("!H", code) + message)
+        payload = struct.pack("!H", code) + message
+        return self.ws_send(payload, flags=CurlWsFlag.CLOSE)
 
 
 class CurlMime:

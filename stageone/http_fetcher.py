@@ -30,9 +30,11 @@ class HttpFetcher:
         self.impersonation_index = 0
         
         # California rotating proxy
-        self.california_proxy = {
-            'https': 'http://35d146gk4kq9otn-country-us-state-california:z51vlpkz84emlb9@rp.scrapegw.com:6060'
-        }
+        # TEMPORARILY COMMENTED OUT
+        # self.california_proxy = {
+        #     'https': 'http://35d146gk4kq9otn-country-us-state-california:z51vlpkz84emlb9@rp.scrapegw.com:6060'
+        # } 
+        self.california_proxy = None  # Proxy disabled
 
     async def fetch_url(self, url: str, impersonation: str = "chrome", max_retries: int = 3) -> Tuple[int, str]:
         """
@@ -58,7 +60,9 @@ class HttpFetcher:
                     # Make HTTP request
                     def make_request():
                         with curl_cffi.Session(impersonate=current_impersonation) as session:
-                            return session.get(url, proxies=self.california_proxy, timeout=15, verify=False)
+                            # PROXY TEMPORARILY DISABLED
+                            # return session.get(url, proxies=self.california_proxy, timeout=15, verify=False)
+                            return session.get(url, timeout=15, verify=False)
                     
                     response = await asyncio.to_thread(make_request)
                     

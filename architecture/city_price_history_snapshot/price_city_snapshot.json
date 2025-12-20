@@ -1,56 +1,58 @@
 {
   "_id": {
-    "$oid": "68c49e88aff7716cdb343684"
+    "$oid": "68c49e89aff7716cdb34368c"
   },
-  "city_id": "8c33116a3f154d99af4ed1f4d8716246",
-  "addressLocality": "Cathedral City",
+  "city_id": "ecebc91f8ca6522a7f1b1f7108bdd5f5",
+  "addressLocality": "Palm Springs",
   "addressRegion": "CA",
   "county": "Riverside County",
   "created_at": {
-    "$date": "2025-09-15T02:52:59.886Z"
+    "$date": "2025-09-19T03:01:23.858Z"
   },
   "current_active_metrics": {
     "sfr": {
-      "count": 25,
-      "avg_price": 983534.44,
+      "count": 44,
+      "avg_price": 1008970.9772727273,
       "moving_averages": {
-        "7_day_average": 949760.98,
-        "30_day_average": 949760.98,
-        "90_day_average": 949760.98
+        "7_day_average": 1009770.5,
+        "30_day_average": 1010584.94,
+        "90_day_average": 1010584.94
       },
       "percent_changes": {
-        "1_day_change": 4.72,
-        "7_day_change": null,
+        "1_day_change": {
+          "$numberDouble": "-0.0"
+        },
+        "7_day_change": -0.14,
         "30_day_change": null,
         "90_day_change": null
       }
     },
     "condo": {
-      "count": 0,
-      "avg_price": null,
+      "count": 3,
+      "avg_price": 883233.3333333334,
       "moving_averages": {
-        "7_day_average": null,
-        "30_day_average": null,
-        "90_day_average": null
+        "7_day_average": 883233.33,
+        "30_day_average": 883233.33,
+        "90_day_average": 883233.33
       },
       "percent_changes": {
-        "1_day_change": null,
-        "7_day_change": null,
+        "1_day_change": 0,
+        "7_day_change": 0,
         "30_day_change": null,
         "90_day_change": null
       }
     },
     "overall": {
-      "total_properties": 25,
-      "avg_price": 983534.44,
+      "total_properties": 47,
+      "avg_price": 1000945.1702127659,
       "moving_averages": {
-        "7_day_average": 949760.98,
-        "30_day_average": 949760.98,
-        "90_day_average": 949760.98
+        "7_day_average": 1001592.85,
+        "30_day_average": 1002275.87,
+        "90_day_average": 1002275.87
       },
       "percent_changes": {
-        "1_day_change": 4.72,
-        "7_day_change": null,
+        "1_day_change": 0,
+        "7_day_change": -0.11,
         "30_day_change": null,
         "90_day_change": null
       }
@@ -59,74 +61,110 @@
   "historical_daily_averages": [
     {
       "date": "2025-09-09",
-      "sfr_avg_price": 949038.04,
+      "sfr_avg_price": 1012556.9,
       "sfr_listing_count": 1,
-      "condo_avg_price": null,
-      "condo_listing_count": 0,
-      "overall_avg_price": 949038.04,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 1,
+      "overall_avg_price": 1003935.33,
       "overall_listing_count": 1
     },
     {
       "date": "2025-09-10",
-      "sfr_avg_price": 949038.04,
+      "sfr_avg_price": 1012556.9,
       "sfr_listing_count": 1,
-      "condo_avg_price": null,
-      "condo_listing_count": 0,
-      "overall_avg_price": 949038.04,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 1,
+      "overall_avg_price": 1003935.33,
       "overall_listing_count": 1
     },
     {
       "date": "2025-09-11",
-      "sfr_avg_price": 949038.04,
+      "sfr_avg_price": 1012556.9,
       "sfr_listing_count": 1,
-      "condo_avg_price": null,
-      "condo_listing_count": 0,
-      "overall_avg_price": 949038.04,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 1,
+      "overall_avg_price": 1003935.33,
       "overall_listing_count": 1
     },
     {
       "date": "2025-09-12",
-      "sfr_avg_price": 939226.11,
+      "sfr_avg_price": 1010370.14,
       "sfr_listing_count": 1,
-      "condo_avg_price": null,
-      "condo_listing_count": 0,
-      "overall_avg_price": 939226.11,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 1,
+      "overall_avg_price": 1002078.61,
       "overall_listing_count": 1
     },
     {
       "date": "2025-09-13",
-      "sfr_avg_price": 939226.11,
-      "sfr_listing_count": 1,
-      "condo_avg_price": null,
-      "condo_listing_count": 0,
-      "overall_avg_price": 939226.11,
-      "overall_listing_count": 1
+      "sfr_avg_price": 1010370.14,
+      "sfr_listing_count": 1, // backfill with 43
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 1, // backfill with 3
+      "overall_avg_price": 1002078.61,
+      "overall_listing_count": 1 // backfill with 46
     },
     {
       "date": "2025-09-14",
-      "sfr_avg_price": 939226.11,
-      "sfr_listing_count": 1,
-      "condo_avg_price": null,
-      "condo_listing_count": 0,
-      "overall_avg_price": 939226.11,
-      "overall_listing_count": 1
+      "sfr_avg_price": 1010370.14,
+      "sfr_listing_count": 1, // backfill with 43
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 1, // backfill with 3
+      "overall_avg_price": 1002078.61,
+      "overall_listing_count": 1 // backfill with 46
     },
     {
       "date": "2025-09-15",
-      "sfr_avg_price": 983534.44,
-      "sfr_listing_count": 25,
-      "condo_avg_price": null,
-      "condo_listing_count": 0,
-      "overall_avg_price": 983534.44,
-      "overall_listing_count": 25
+      "sfr_avg_price": 1010370.14,
+      "sfr_listing_count": 43,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 3,
+      "overall_avg_price": 1002078.61,
+      "overall_listing_count": 46
+    },
+    {
+      "date": "2025-09-16",
+      "sfr_avg_price": 1010370.14,
+      "sfr_listing_count": 43,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 3,
+      "overall_avg_price": 1002078.61,
+      "overall_listing_count": 46
+    },
+    {
+      "date": "2025-09-17",
+      "sfr_avg_price": 1008970.98,
+      "sfr_listing_count": 44,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 3,
+      "overall_avg_price": 1000945.17,
+      "overall_listing_count": 47
+    },
+    {
+      "date": "2025-09-18",
+      "sfr_avg_price": 1008970.98,
+      "sfr_listing_count": 44,
+      "condo_avg_price": 883233.33,
+      "condo_listing_count": 3,
+      "overall_avg_price": 1000945.17,
+      "overall_listing_count": 47
+    },
+    {
+      "date": "2025-09-19",
+      "sfr_avg_price": 1008970.9772727273,
+      "sfr_listing_count": 44,
+      "condo_avg_price": 883233.3333333334,
+      "condo_listing_count": 3,
+      "overall_avg_price": 1000945.1702127659,
+      "overall_listing_count": 47
     }
   ],
   "last_snapshot_date": {
-    "$date": "2025-09-15T02:52:59.886Z"
+    "$date": "2025-09-19T03:01:23.858Z"
   },
   "percentage_backfill_applied": true,
   "percentage_backfill_date": {
-    "$date": "2025-09-14T20:57:58.579Z"
+    "$date": "2025-09-14T20:58:00.197Z"
   },
   "percentage_backfill_version": "2.0"
 }

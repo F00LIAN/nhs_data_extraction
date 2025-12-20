@@ -30,9 +30,11 @@ class HTTPClient:
         self.browser_lock = asyncio.Lock()
         
         # California rotating proxy
-        self.proxy = {
-            'https': 'http://35d146gk4kq9otn-country-us-state-california:z51vlpkz84emlb9@rp.scrapegw.com:6060'
-        }
+        # TEMPORARILY COMMENTED OUT
+        # self.proxy = {
+        #     'https': 'http://35d146gk4kq9otn-country-us-state-california:z51vlpkz84emlb9@rp.scrapegw.com:6060'
+        # }
+        self.proxy = None  # Proxy disabled
     
     async def fetch_url(self, url: str, impersonation: str = "auto") -> Tuple[int, str]:
         """
@@ -68,11 +70,12 @@ class HTTPClient:
                     browsers_tried.append(current_impersonation)
                     
                     # Make HTTP request
+                    # PROXY TEMPORARILY DISABLED
                     response = await asyncio.to_thread(
                         curl_cffi.get,
                         url,
                         impersonate=current_impersonation,
-                        proxies=self.proxy,
+                        # proxies=self.proxy,  # PROXY DISABLED
                         timeout=30,
                         verify=False
                     )

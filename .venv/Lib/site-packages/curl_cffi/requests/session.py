@@ -9,10 +9,10 @@ import threading
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager, contextmanager, suppress
+from collections.abc import Callable
 from io import BytesIO
 from typing import (
     TYPE_CHECKING,
-    Callable,
     Generic,
     Literal,
     Optional,
@@ -22,6 +22,7 @@ from typing import (
     cast,
 )
 from urllib.parse import urlparse
+from datetime import timedelta
 
 from ..aio import AsyncCurl
 from ..const import CurlHttpVersion, CurlInfo, CurlOpt
@@ -33,13 +34,7 @@ from .headers import Headers, HeaderTypes
 from .impersonate import BrowserTypeLiteral, ExtraFingerprints, ExtraFpDict
 from .models import STREAM_END, Response
 from .utils import HttpVersionLiteral, not_set, set_curl_options
-from .websockets import AsyncWebSocket, WebSocket
-
-with suppress(ImportError):
-    import gevent
-
-with suppress(ImportError):
-    import eventlet.tpool
+from .websockets import AsyncWebSocket, WebSocket, WebSocketError
 
 # Added in 3.13: https://docs.python.org/3/library/typing.html#typing.TypeVar.__default__
 if sys.version_info >= (3, 13):
@@ -85,6 +80,7 @@ if TYPE_CHECKING:
         cert: Optional[Union[str, tuple[str, str]]]
         response_class: Optional[type[R]]
         discard_cookies: bool
+        raise_for_status: bool
 
     class StreamRequestParams(TypedDict, total=False):
         params: Optional[Union[dict, list, tuple]]
@@ -193,6 +189,7 @@ class BaseSession(Generic[R]):
         cert: Optional[Union[str, tuple[str, str]]] = None,
         response_class: Optional[type[R]] = None,
         discard_cookies: bool = False,
+        raise_for_status: bool = False,
     ):
         self.headers = Headers(headers)
         self._cookies = Cookies(cookies)  # guarded by @property
@@ -225,6 +222,7 @@ class BaseSession(Generic[R]):
             )
         self.response_class = response_class or Response
         self.discard_cookies = discard_cookies
+        self.raise_for_status = raise_for_status
 
         if proxy and proxies:
             raise TypeError("Cannot specify both 'proxy' and 'proxies'")
@@ -307,13 +305,19 @@ class BaseSession(Generic[R]):
         rsp.local_ip = cast(bytes, c.getinfo(CurlInfo.LOCAL_IP)).decode()
         rsp.local_port = cast(int, c.getinfo(CurlInfo.LOCAL_PORT))
         rsp.default_encoding = default_encoding
-        rsp.elapsed = cast(float, c.getinfo(CurlInfo.TOTAL_TIME))
+        rsp.elapsed = timedelta(seconds=cast(float, c.getinfo(CurlInfo.TOTAL_TIME)))
         rsp.redirect_count = cast(int, c.getinfo(CurlInfo.REDIRECT_COUNT))
         redirect_url_bytes = cast(bytes, c.getinfo(CurlInfo.REDIRECT_URL))
         try:
             rsp.redirect_url = redirect_url_bytes.decode()
         except UnicodeDecodeError:
             rsp.redirect_url = redirect_url_bytes.decode("latin-1")
+
+        rsp.download_size = cast(int, c.getinfo(CurlInfo.SIZE_DOWNLOAD_T))
+        rsp.upload_size = cast(int, c.getinfo(CurlInfo.SIZE_UPLOAD_T))
+        rsp.header_size = cast(int, c.getinfo(CurlInfo.HEADER_SIZE))
+        rsp.request_size = cast(int, c.getinfo(CurlInfo.REQUEST_SIZE))
+        rsp.response_size = rsp.download_size + rsp.header_size
 
         # custom info options
         for info in self.curl_infos:
@@ -382,6 +386,8 @@ class Session(BaseSession[R]):
                 automatic detection.
             cert: a tuple of (cert, key) filenames for client cert.
             response_class: A customized subtype of ``Response`` to use.
+            raise_for_status: automatically raise an HTTPError for 4xx and 5xx
+                status codes.
 
         Notes:
             This class can be used as a context manager.
@@ -553,12 +559,12 @@ class Session(BaseSession[R]):
             files=files,
             auth=auth or self.auth,
             timeout=self.timeout if timeout is not_set else timeout,
-            allow_redirects=self.allow_redirects
-            if allow_redirects is None
-            else allow_redirects,
-            max_redirects=self.max_redirects
-            if max_redirects is None
-            else max_redirects,
+            allow_redirects=(
+                self.allow_redirects if allow_redirects is None else allow_redirects
+            ),
+            max_redirects=(
+                self.max_redirects if max_redirects is None else max_redirects
+            ),
             proxies_list=[self.proxies, proxies],
             proxy=proxy,
             proxy_auth=proxy_auth or self.proxy_auth,
@@ -570,9 +576,9 @@ class Session(BaseSession[R]):
             ja3=ja3 or self.ja3,
             akamai=akamai or self.akamai,
             extra_fp=extra_fp or self.extra_fp,
-            default_headers=self.default_headers
-            if default_headers is None
-            else default_headers,
+            default_headers=(
+                self.default_headers if default_headers is None else default_headers
+            ),
             quote=quote,
             http_version=http_version or self.http_version,
             interface=interface or self.interface,
@@ -627,14 +633,20 @@ class Session(BaseSession[R]):
             rsp.stream_task = stream_task
             rsp.quit_now = quit_now
             rsp.queue = q
+            if self.raise_for_status:
+                rsp.raise_for_status()
             return rsp
         else:
             try:
                 if self._thread == "eventlet":
                     # see: https://eventlet.net/doc/threading.html
+                    import eventlet.tpool
+
                     eventlet.tpool.execute(c.perform)  # type: ignore
                 elif self._thread == "gevent":
                     # see: https://www.gevent.org/api/gevent.threadpool.html
+                    import gevent
+
                     gevent.get_hub().threadpool.spawn(c.perform).get()  # type: ignore
                 else:
                     c.perform()
@@ -650,6 +662,8 @@ class Session(BaseSession[R]):
                     c, buffer, header_buffer, default_encoding, discard_cookies
                 )
                 rsp.request = req
+                if self.raise_for_status:
+                    rsp.raise_for_status()
                 return rsp
             finally:
                 c.reset()
@@ -727,6 +741,8 @@ class AsyncSession(BaseSession[R]):
                 automatic detection.
             cert: a tuple of (cert, key) filenames for client cert.
             response_class: A customized subtype of ``Response`` to use.
+            raise_for_status: automatically raise an HTTPError for 4xx and 5xx
+                status codes.
 
         Notes:
             This class can be used as a context manager, and it's recommended to use via
@@ -799,7 +815,7 @@ class AsyncSession(BaseSession[R]):
                 break
 
     def release_curl(self, curl):
-        curl.clean_after_perform()
+        curl.clean_handles_and_buffers()
         if not self._closed:
             self.acurl.remove_handle(curl)
             curl.reset()
@@ -848,6 +864,14 @@ class AsyncSession(BaseSession[R]):
         interface: Optional[str] = None,
         cert: Optional[Union[str, tuple[str, str]]] = None,
         max_recv_speed: int = 0,
+        recv_queue_size: int = 512,
+        send_queue_size: int = 256,
+        max_send_batch_size: int = 256,
+        coalesce_frames: bool = False,
+        retry_on_recv_error: bool = False,
+        yield_interval: float = 0.001,
+        fair_scheduling: bool = False,
+        yield_mask: int = 63,
     ) -> AsyncWebSocket:
         """Connects to a WebSocket.
 
@@ -885,6 +909,36 @@ class AsyncSession(BaseSession[R]):
             interface: which interface to use.
             cert: a tuple of (cert, key) filenames for client cert.
             max_recv_speed: maximum receive speed, bytes per second.
+            recv_queue_size: The maximum number of incoming WebSocket
+                messages to buffer internally. This queue stores messages received
+                by the Curl socket that are waiting to be consumed by calling `recv()`.
+            send_queue_size: The maximum number of outgoing WebSocket
+                messages to buffer before applying network backpressure. When you call
+                `send(...)` the message is placed in this queue and transmitted when
+                the Curl socket is next available for sending.
+            max_send_batch_size: The max batch size for sent frames.
+            coalesce_frames: If `True`, multiple pending messages in the send queue
+                may be merged into a single WebSocket frame for improved throughput.
+                **Warning:** This breaks the one-to-one mapping of `send()` calls to
+                frames and should only be used when the application protocol is
+                designed to handle concatenated data streams. Defaults to `False`.
+            retry_on_recv_error: Retries `ws_recv()` if a recv error is raised.
+                Retries up to a limited number of times with a delay in between.
+            yield_interval: How often to yield control back to the event loop.
+                This is a trade-off between throughput and responsiveness. Lower values
+                means the loop yields more frequently and enables other tasks to run,
+                while higher values are better for throughput. The balanced default
+                is `1ms` but you can customize this to fit your application/use case.
+            fair_scheduling: Changes the I/O priority from favoring receives (`5:1`)
+                to a balanced ratio (`1:1`). Enable this to improve send responsiveness
+                under heavy, concurrent load, at the cost of significantly lower overall
+                throughput.
+            yield_mask: Controls the frequency of cooperative multitasking
+                yields in the read loop. The loop yields every `yield_mask + 1`
+                operations. For efficiency, this value must be a power of two minus one
+                (e.g., `63`, `127`, `255`). Lower values yield more often, improving
+                fairness at the cost of throughput. Higher values yield less often,
+                prioritizing throughput.
         """
 
         self._check_session_closed()
@@ -900,12 +954,12 @@ class AsyncSession(BaseSession[R]):
             cookies_list=[self.cookies, cookies],
             auth=auth or self.auth,
             timeout=self.timeout if timeout is not_set else timeout,
-            allow_redirects=self.allow_redirects
-            if allow_redirects is None
-            else allow_redirects,
-            max_redirects=self.max_redirects
-            if max_redirects is None
-            else max_redirects,
+            allow_redirects=(
+                self.allow_redirects if allow_redirects is None else allow_redirects
+            ),
+            max_redirects=(
+                self.max_redirects if max_redirects is None else max_redirects
+            ),
             proxies_list=[self.proxies, proxies],
             proxy=proxy,
             proxy_auth=proxy_auth or self.proxy_auth,
@@ -916,9 +970,9 @@ class AsyncSession(BaseSession[R]):
             ja3=ja3 or self.ja3,
             akamai=akamai or self.akamai,
             extra_fp=extra_fp or self.extra_fp,
-            default_headers=self.default_headers
-            if default_headers is None
-            else default_headers,
+            default_headers=(
+                self.default_headers if default_headers is None else default_headers
+            ),
             quote=quote,
             http_version=http_version or self.http_version,
             interface=interface or self.interface,
@@ -927,14 +981,31 @@ class AsyncSession(BaseSession[R]):
             queue_class=asyncio.Queue,
             event_class=asyncio.Event,
         )
+        curl.setopt(CurlOpt.TCP_NODELAY, 1)
         curl.setopt(CurlOpt.CONNECT_ONLY, 2)  # https://curl.se/docs/websocket.html
 
         await self.loop.run_in_executor(None, curl.perform)
-        return AsyncWebSocket(
+        ws: AsyncWebSocket = AsyncWebSocket(
             cast(AsyncSession[Response], self),
             curl,
             autoclose=autoclose,
+            recv_queue_size=recv_queue_size,
+            send_queue_size=send_queue_size,
+            max_send_batch_size=max_send_batch_size,
+            coalesce_frames=coalesce_frames,
+            retry_on_recv_error=retry_on_recv_error,
+            yield_interval=yield_interval,
+            fair_scheduling=fair_scheduling,
+            yield_mask=yield_mask,
         )
+
+        try:
+            ws._start_io_tasks()
+        except WebSocketError:
+            ws.terminate()
+            raise
+
+        return ws
 
     async def request(
         self,
@@ -971,7 +1042,7 @@ class AsyncSession(BaseSession[R]):
         max_recv_speed: int = 0,
         multipart: Optional[CurlMime] = None,
         discard_cookies: bool = False,
-    ):
+    ) -> R:
         """Send the request, see ``curl_cffi.requests.request`` for details on args."""
 
         self._check_session_closed()
@@ -990,12 +1061,12 @@ class AsyncSession(BaseSession[R]):
             files=files,
             auth=auth or self.auth,
             timeout=self.timeout if timeout is not_set else timeout,
-            allow_redirects=self.allow_redirects
-            if allow_redirects is None
-            else allow_redirects,
-            max_redirects=self.max_redirects
-            if max_redirects is None
-            else max_redirects,
+            allow_redirects=(
+                self.allow_redirects if allow_redirects is None else allow_redirects
+            ),
+            max_redirects=(
+                self.max_redirects if max_redirects is None else max_redirects
+            ),
             proxies_list=[self.proxies, proxies],
             proxy=proxy,
             proxy_auth=proxy_auth or self.proxy_auth,
@@ -1007,9 +1078,9 @@ class AsyncSession(BaseSession[R]):
             ja3=ja3 or self.ja3,
             akamai=akamai or self.akamai,
             extra_fp=extra_fp or self.extra_fp,
-            default_headers=self.default_headers
-            if default_headers is None
-            else default_headers,
+            default_headers=(
+                self.default_headers if default_headers is None else default_headers
+            ),
             quote=quote,
             http_version=http_version or self.http_version,
             interface=interface or self.interface,
@@ -1063,6 +1134,8 @@ class AsyncSession(BaseSession[R]):
             rsp.astream_task = stream_task
             rsp.quit_now = quit_now
             rsp.queue = q
+            if self.raise_for_status:
+                rsp.raise_for_status()
             return rsp
         else:
             try:
@@ -1080,33 +1153,35 @@ class AsyncSession(BaseSession[R]):
                     curl, buffer, header_buffer, default_encoding, discard_cookies
                 )
                 rsp.request = req
+                if self.raise_for_status:
+                    rsp.raise_for_status()
                 return rsp
             finally:
                 self.release_curl(curl)
 
-    def head(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="HEAD", url=url, **kwargs)
+    async def head(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="HEAD", url=url, **kwargs)
 
-    def get(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="GET", url=url, **kwargs)
+    async def get(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="GET", url=url, **kwargs)
 
-    def post(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="POST", url=url, **kwargs)
+    async def post(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="POST", url=url, **kwargs)
 
-    def put(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="PUT", url=url, **kwargs)
+    async def put(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="PUT", url=url, **kwargs)
 
-    def patch(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="PATCH", url=url, **kwargs)
+    async def patch(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="PATCH", url=url, **kwargs)
 
-    def delete(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="DELETE", url=url, **kwargs)
+    async def delete(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="DELETE", url=url, **kwargs)
 
-    def options(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="OPTIONS", url=url, **kwargs)
+    async def options(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="OPTIONS", url=url, **kwargs)
 
-    def trace(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="TRACE", url=url, **kwargs)
+    async def trace(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="TRACE", url=url, **kwargs)
 
-    def query(self, url: str, **kwargs: Unpack[RequestParams]):
-        return self.request(method="QUERY", url=url, **kwargs)
+    async def query(self, url: str, **kwargs: Unpack[RequestParams]) -> R:
+        return await self.request(method="QUERY", url=url, **kwargs)

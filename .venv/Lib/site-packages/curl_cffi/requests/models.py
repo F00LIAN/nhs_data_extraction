@@ -3,8 +3,9 @@ import queue
 import re
 import warnings
 from concurrent.futures import Future
-from typing import Any, Callable, Optional, Union
-from collections.abc import Awaitable
+from typing import Any, Optional, Union
+from collections.abc import Awaitable, Callable
+from datetime import timedelta
 
 from ..curl import Curl
 from ..utils import CurlCffiWarning
@@ -54,7 +55,7 @@ class Response:
         ok: is status_code in [200, 400)?
         headers: response headers.
         cookies: response cookies.
-        elapsed: how many seconds the request cost.
+        elapsed: timedelta of the request duration.
         encoding: http body encoding.
         charset: alias for encoding.
         primary_ip: primary ip of the server.
@@ -69,6 +70,11 @@ class Response:
         redirect_url: the final redirected url.
         http_version: http version used.
         history: history redirections, only headers are available.
+        download_size: total downloaded bytes (body).
+        upload_size: total uploaded bytes (body).
+        header_size: total header size.
+        request_size: request size.
+        response_size: download_size + header_size
     """
 
     def __init__(self, curl: Optional[Curl] = None, request: Optional[Request] = None):
@@ -81,7 +87,7 @@ class Response:
         self.ok = True
         self.headers = Headers()
         self.cookies = Cookies()
-        self.elapsed = 0.0
+        self.elapsed: timedelta = timedelta()
         self.default_encoding: Union[str, Callable[[bytes], str]] = "utf-8"
         self.redirect_count = 0
         self.redirect_url = ""
@@ -96,6 +102,11 @@ class Response:
         self.stream_task: Optional[Future] = None
         self.astream_task: Optional[Awaitable] = None
         self.quit_now = None
+        self.download_size: int = 0
+        self.upload_size: int = 0
+        self.header_size: int = 0
+        self.request_size: int = 0
+        self.response_size: int = 0
 
     @property
     def charset(self) -> str:

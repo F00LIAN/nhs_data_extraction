@@ -9,7 +9,7 @@ bs4==0.0.2
 certifi==2025.7.14
 cffi==1.17.1
 charset-normalizer==3.4.2
-curl_cffi==0.13.0
+curl_cffi==0.14.0
 dnspython==1.16.0
 frozenlist==1.7.0
 h11==0.16.0

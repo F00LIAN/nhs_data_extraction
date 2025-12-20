@@ -1,0 +1,15 @@
+2025-09-19 17:09:57,928 - INFO - ============================================================
+2025-09-19 17:09:57,956 - INFO - ============================================================
+2025-09-19 17:09:57,958 - INFO - Mode: DRY RUN
+2025-09-19 17:09:59,258 - INFO - Found 36 snapshots to check for backfill
+2025-09-19 17:10:00,133 - INFO - Found proper counts on 2025-09-15: SFR=43, Condo=3, Overall=46
+2025-09-19 17:10:00,569 - INFO - Found proper counts on 2025-09-15: SFR=2, Condo=1, Overall=3
+2025-09-19 17:10:01,125 - INFO - Found proper counts on 2025-09-15: SFR=11, Condo=11, Overall=22
+2025-09-19 17:10:01,572 - INFO - 
+============================================================
+2025-09-19 17:10:01,575 - INFO - ============================================================
+2025-09-19 17:10:01,577 - INFO - Mode: LIVE UPDATE
+2025-09-19 17:10:02,599 - INFO - Found 36 snapshots to check for backfill
+2025-09-19 17:10:03,460 - INFO - Found proper counts on 2025-09-15: SFR=43, Condo=3, Overall=46
+2025-09-19 17:10:04,002 - INFO - Found proper counts on 2025-09-15: SFR=2, Condo=1, Overall=3
+2025-09-19 17:10:04,631 - INFO - Found proper counts on 2025-09-15: SFR=11, Condo=11, Overall=22

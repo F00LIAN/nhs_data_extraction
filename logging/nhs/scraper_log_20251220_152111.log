@@ -1,0 +1,16 @@
+2025-12-20 15:21:11,936 - INFO - 🚀 Starting NewHomeSource scraping session
+2025-12-20 15:21:11,936 - INFO - 🌐 Browser impersonation: chrome
+2025-12-20 15:21:11,936 - INFO - 📊 Total URLs to process: 18
+2025-12-20 15:21:12,932 - INFO - 📊 Found 203 existing listings in database
+2025-12-20 15:21:12,933 - INFO - 🔍 Processing 1/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1 (using chrome)
+2025-12-20 15:21:19,649 - WARNING - ⚠️ No listings found for https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-1
+2025-12-20 15:21:24,651 - INFO - 🔍 Processing 2/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-2 (using safari)
+2025-12-20 15:21:30,983 - WARNING - ⚠️ No listings found for https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-2
+2025-12-20 15:21:35,997 - INFO - 🔍 Processing 3/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-3 (using firefox)
+2025-12-20 15:21:42,392 - WARNING - ⚠️ No listings found for https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-3
+2025-12-20 15:21:47,397 - INFO - 🔍 Processing 4/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-4 (using chrome_android)
+2025-12-20 15:21:53,742 - WARNING - ⚠️ No listings found for https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-4
+2025-12-20 15:21:58,757 - INFO - 🔍 Processing 5/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-5 (using safari_ios)
+2025-12-20 15:22:05,148 - WARNING - ⚠️ No listings found for https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-5
+2025-12-20 15:22:10,158 - INFO - 🔍 Processing 6/18: https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-6 (using chrome)
+2025-12-20 15:22:16,394 - WARNING - ⚠️ No listings found for https://www.newhomesource.com/communities/ca/ventura-area/ventura-county/page-6
